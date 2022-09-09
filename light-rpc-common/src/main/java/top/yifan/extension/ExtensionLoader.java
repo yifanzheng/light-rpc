@@ -19,11 +19,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 @Slf4j
 public final class ExtensionLoader<T> {
-
     private static final String SERVICE_DIRECTORY = "META-INF/extensions/";
     private static final Map<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
-
     private final Class<?> type;
     private final Map<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
@@ -75,6 +73,14 @@ public final class ExtensionLoader<T> {
         return (T) instance;
     }
 
+    public boolean hasExtension(String name) {
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Extension name == null");
+        }
+        Class<?> c = this.getExtensionClass(name);
+        return c != null;
+    }
+
     private T createExtension(String name) {
         // load all extension classes of type T from file and get specific one by name
         Class<?> clazz = getExtensionClasses().get(name);
@@ -91,6 +97,16 @@ public final class ExtensionLoader<T> {
             }
         }
         return instance;
+    }
+
+    private Class<?> getExtensionClass(String name) {
+        if (type == null) {
+            throw new IllegalArgumentException("Extension type == null");
+        }
+        if (StringUtils.isEmpty(name)) {
+            throw new IllegalArgumentException("Extension name == null");
+        }
+        return getExtensionClasses().get(name);
     }
 
     private Map<String, Class<?>> getExtensionClasses() {

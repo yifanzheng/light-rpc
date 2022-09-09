@@ -1,11 +1,14 @@
 package top.yifan.codec;
 
+import top.yifan.extension.SPI;
+
 /**
  * @author Star Zheng
  */
+@SPI
 public interface Codec {
 
-    void encode(Object data);
+    byte[] encode(Object data, String serializeKey);
 
-    void decode(byte[] data);
+    Object decode(byte[] data, String serializeKey);
 }

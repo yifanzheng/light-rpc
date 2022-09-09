@@ -4,9 +4,12 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.ServerSocketChannel;
 import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import top.yifan.constants.CommonConstants;
@@ -17,7 +20,6 @@ import java.util.concurrent.ThreadFactory;
  * @author Star Zheng
  */
 public class NettyEventLoopFactory {
-
     private NettyEventLoopFactory() {
     }
 
@@ -29,6 +31,10 @@ public class NettyEventLoopFactory {
 
     public static Class<? extends SocketChannel> socketChannelClass() {
         return shouldEpoll() ? EpollSocketChannel.class : NioSocketChannel.class;
+    }
+
+    public static Class<? extends ServerSocketChannel> serverSocketChannelClass() {
+        return shouldEpoll() ? EpollServerSocketChannel.class : NioServerSocketChannel.class;
     }
 
     private static boolean shouldEpoll() {

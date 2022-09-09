@@ -13,8 +13,8 @@ public class URLUtil {
     }
 
     public static String fullURL(String endpoint, String uri) {
-        Preconditions.checkArgument(StringUtils.isBlank(endpoint), "Endpoint can't be null");
-        Preconditions.checkArgument(StringUtils.isBlank(uri), "URI can't be null");
+        Preconditions.checkArgument(StringUtils.isNoneBlank(endpoint), "Endpoint can't be null");
+        Preconditions.checkArgument(StringUtils.isNoneBlank(uri), "URI can't be null");
         if (endpoint.endsWith("/")) {
             if (uri.startsWith("/")) {
                 uri = uri.substring(1);

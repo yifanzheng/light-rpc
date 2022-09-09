@@ -3,5 +3,6 @@ package top.yifan.remoting.transport;
 /**
  * @author Star Zheng
  */
-public interface Client {
+public abstract class AbstractServer implements RemotingServer {
+
 }

@@ -12,12 +12,9 @@ public class CodecConstants {
     /**
      * Magic Number.
      */
-    public static final byte[] MAGIC = {(byte) 'g', (byte) 'r', (byte) 'p', (byte) 'c'};
+    public static final byte[] MAGIC = {(byte) 'l', (byte) 'r', (byte) 'p', (byte) 'c'};
     public static final byte VERSION = 1;
 
-    public static final byte REQUEST_TYPE = 1;
-    public static final byte RESPONSE_TYPE = 2;
-    // ping
     public static final byte HEARTBEAT_TYPE = 3;
 
     /**

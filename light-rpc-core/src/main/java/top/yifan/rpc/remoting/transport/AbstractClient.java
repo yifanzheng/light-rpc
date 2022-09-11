@@ -11,7 +11,7 @@ import top.yifan.rpc.exchange.Response;
 @Slf4j
 public abstract class AbstractClient implements RemotingClient {
 
-    public AbstractClient() throws RemotingException {
+    protected AbstractClient() throws RemotingException {
         try {
             doOpen();
         } catch (Exception e) {

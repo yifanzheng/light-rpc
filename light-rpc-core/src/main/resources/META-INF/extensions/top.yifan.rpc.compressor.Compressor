@@ -1,0 +1,3 @@
+gzip=top.yifan.rpc.compressor.Gzip
+bzip2=top.yifan.rpc.compressor.Bzip2
+snappy=top.yifan.rpc.compressor.Snappy

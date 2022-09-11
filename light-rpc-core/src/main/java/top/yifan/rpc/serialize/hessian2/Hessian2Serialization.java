@@ -20,8 +20,8 @@ import java.io.IOException;
 public class Hessian2Serialization implements Serialization {
 
     @Override
-    public SerializationType getType() {
-        return SerializationType.HESSIAN2;
+    public byte getSerializeId() {
+        return SerializationType.HESSIAN2.getCode();
     }
 
     @Override

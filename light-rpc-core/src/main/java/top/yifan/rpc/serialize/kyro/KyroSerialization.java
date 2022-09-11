@@ -32,8 +32,8 @@ public class KyroSerialization implements Serialization {
     });
 
     @Override
-    public SerializationType getType() {
-        return SerializationType.KYRO;
+    public byte getSerializeId() {
+        return SerializationType.KYRO.getCode();
     }
 
     @Override

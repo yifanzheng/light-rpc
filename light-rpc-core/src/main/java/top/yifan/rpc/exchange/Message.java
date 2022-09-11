@@ -19,12 +19,12 @@ public class Message {
     /**
      * message id
      */
-    private int mId;
+    private int msgId;
 
     /**
      * message type: request、response
      */
-    private byte mType;
+    private byte msgType;
 
     /**
      * 编解码 type
@@ -47,12 +47,12 @@ public class Message {
     private Object data;
 
     public Message() {
-        this.mId = newId();
+        this.msgId = newId();
     }
 
-    public Message(int mId, byte mType, byte codec, byte compress) {
-        this.mId = mId;
-        this.mType = mType;
+    public Message(int msgId, byte msgType, byte codec, byte compress) {
+        this.msgId = msgId;
+        this.msgType = msgType;
         this.codec = codec;
         this.compress = compress;
     }

@@ -7,9 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -30,6 +28,7 @@ public final class ExtensionLoader<T> {
         this.type = type;
     }
 
+    @SuppressWarnings("unchecked")
     public static <S> ExtensionLoader<S> getExtensionLoader(Class<S> type) {
         if (type == null) {
             throw new IllegalArgumentException("Extension type should not be null.");
@@ -49,6 +48,7 @@ public final class ExtensionLoader<T> {
         return extensionLoader;
     }
 
+    @SuppressWarnings("unchecked")
     public T getExtension(String name) {
         if (StringUtils.isBlank(name)) {
             throw new IllegalArgumentException("Extension name should not be null or empty.");
@@ -81,11 +81,17 @@ public final class ExtensionLoader<T> {
         return c != null;
     }
 
+    public Set<String> getSupportedExtensions() {
+        Map<String, Class<?>> classes = getExtensionClasses();
+        return Collections.unmodifiableSet(new TreeSet<>(classes.keySet()));
+    }
+
+    @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         // load all extension classes of type T from file and get specific one by name
         Class<?> clazz = getExtensionClasses().get(name);
         if (clazz == null) {
-            throw new RuntimeException("No such extension of name " + name);
+            throw new IllegalStateException("No such extension of name " + name);
         }
         T instance = (T) EXTENSION_INSTANCES.get(clazz);
         if (instance == null) {

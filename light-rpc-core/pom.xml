@@ -16,9 +16,10 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.version>4.1.74.Final</netty.version>
-
         <spring.version>5.2.7.RELEASE</spring.version>
         <curator-version>4.2.0</curator-version>
+        <commons.compress.version>1.21</commons.compress.version>
+        <snappy.java.version>1.1.8.4</snappy.java.version>
         <!-- serialization -->
         <protostuff.version>1.7.2</protostuff.version>
         <hessian.version>4.0.65</hessian.version>
@@ -58,6 +59,19 @@
             <artifactId>spring-context</artifactId>
             <version>${spring.version}</version>
         </dependency>
+        <!-- compress -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+            <version>${commons.compress.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xerial.snappy</groupId>
+            <artifactId>snappy-java</artifactId>
+            <version>${snappy.java.version}</version>
+            <optional>true</optional>
+        </dependency>
+        <!-- ./ compress -->
         <!-- serialization -->
         <dependency>
             <groupId>io.protostuff</groupId>

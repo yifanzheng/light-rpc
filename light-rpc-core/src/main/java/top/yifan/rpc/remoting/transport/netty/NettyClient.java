@@ -46,7 +46,7 @@ public class NettyClient extends AbstractClient {
             // Failed to connect to provider server by other reason
             Throwable cause = channelFuture.cause();
             log.error("Failed to connect to provider server by other reason.", cause);
-            throw new RemotingException("client failed to connect to server " + address + ", error message is:" + cause.getMessage(), cause);
+            throw new RemotingException("Client failed to connect to server " + address + ", error message is:" + cause.getMessage(), cause);
         } else {
             // Client timeout
             RemotingException remotingException = new RemotingException("client failed to connect to server " + address + " client  timeout " + 60000);
@@ -82,12 +82,12 @@ public class NettyClient extends AbstractClient {
             throw new RemotingException("Failed to send message, cause: Channel inactive, channel: -> " + inetSocketAddress);
         }
         // 结果回调Future
-        DefaultExchangeFuture resultFuture = DefaultExchangeFuture.newFuture("hello");
+        DefaultExchangeFuture resultFuture = DefaultExchangeFuture.newFuture(request.getRequestId());
 
         Message message = new Message();
-        message.setMType(MessageType.REQUEST.getCode());
-        message.setCodec(SerializationType.PROTOSTUFF.getCode());
-        message.setCompress(CompressType.GZIP.getCode());
+        message.setMsgType(MessageType.REQUEST.getCode());
+        message.setCodec(SerializationType.KYRO.getCode());
+        message.setCompress(CompressorType.GZIP.getCode());
         message.setData(request);
         // 发送请求
         nettyChannel.send(message, 30000);

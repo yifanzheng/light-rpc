@@ -1,5 +1,6 @@
 package top.yifan.rpc.handler;
 
+import top.yifan.rpc.example.DemoServiceImpl;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
 
@@ -19,7 +20,7 @@ public class RpcRequestHandler {
         try {
             // TODO 配置中心获取
             // 获取指定服务，并执行指定方法
-            Object obj = Class.forName(request.getClassName()).newInstance();
+            Object obj = Class.forName(DemoServiceImpl.class.getName()).newInstance();
             Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
             method.setAccessible(true);
             Object result = method.invoke(obj, request.getParameters());

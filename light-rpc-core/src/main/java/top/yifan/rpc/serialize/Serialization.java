@@ -12,7 +12,7 @@ import top.yifan.extension.SPI;
 @SPI
 public interface Serialization {
 
-    SerializationType getType();
+    byte getSerializeId();
 
     /**
      * 序列化
@@ -27,7 +27,7 @@ public interface Serialization {
      *
      * @param bytes 序列化后的字节数组
      * @param clazz 目标类
-     * @param <T>   类的类型。举个例子,  {@code String.class} 的类型是 {@code Class<String>}.
+     * @param <T>   类的类型。比如 {@code String.class} 的类型是 {@code Class<String>}.
      *              如果不知道类的类型的话，使用 {@code Class<?>}
      * @return 反序列化的对象
      */

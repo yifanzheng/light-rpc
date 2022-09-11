@@ -18,8 +18,8 @@ public class JacksonSerialization implements Serialization {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     @Override
-    public SerializationType getType() {
-        return SerializationType.JSON;
+    public byte getSerializeId() {
+        return SerializationType.JSON.getCode();
     }
 
     @Override

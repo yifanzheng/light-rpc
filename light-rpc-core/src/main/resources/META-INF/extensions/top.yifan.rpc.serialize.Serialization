@@ -1,1 +1,4 @@
+kyro=top.yifan.rpc.serialize.kyro.KyroSerialization
 hession2=top.yifan.rpc.serialize.hessian2.Hessian2Serialization
+protobuff=top.yifan.rpc.serialize.protobuff.ProtobuffSerialization
+json=top.yifan.rpc.serialize.jackson.JacksonSerialization

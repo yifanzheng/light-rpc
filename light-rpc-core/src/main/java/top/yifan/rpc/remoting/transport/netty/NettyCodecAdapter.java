@@ -1,43 +1,46 @@
 package top.yifan.rpc.remoting.transport.netty;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.MessageToByteEncoder;
 import lombok.extern.slf4j.Slf4j;
-import top.yifan.constants.MessageType;
-import top.yifan.rpc.codec.Codec;
 import top.yifan.constants.CodecConstants;
 import top.yifan.constants.CommonConstants;
-import top.yifan.rpc.exchange.Message;
+import top.yifan.constants.MessageType;
 import top.yifan.extension.ExtensionLoader;
+import top.yifan.io.Bytes;
+import top.yifan.rpc.codec.Codec;
+import top.yifan.rpc.exchange.Message;
+import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.Response;
 
 import java.util.Arrays;
+
+import static top.yifan.constants.CodecConstants.*;
 
 /**
  * Netty Codec 适配器，使用定长头+字节数组作为自定义编码协议（防止TCP沾包问题）
  * <pre>
- *      0     1     2     3     4        5    6    7    8        9          10      11    12   13  14  15 16
- *   +-----+-----+-----+-----+--------+----+----+----+------+-----------+-------+--------+-----+-----+-------+
- *   |   magic   code        |version |    full length      |messageType| codec |compress|    messageId      |
+ *      0     1     2     3      4        5        6        7         8   9   10   11    12    13    14   15
+ *   +-----+-----+-----+-----+-------+--------+-------+-------------+---+---+----+----+-----+-----+-----+----+
+ *   |   magic   number      |version|compress| codec | messageType |   messageId     |     dataLength       |
  *   +-----------------------+--------+---------------------+-----------+-----------+-----------+------------+
  *   |                                                                                                       |
- *   |                                         body                                                          |
+ *   |                                         data                                                          |
  *   |                                                                                                       |
  *   |                                        ... ...                                                        |
  *   +-------------------------------------------------------------------------------------------------------+
- * 4Byte  magic code（魔法数）   1Byte version（版本）   4Byte full length（消息长度）    1Byte messageType（消息类型）
- * 1Byte codec（序列化类型） 1Byte compress（压缩类型）    4Byte requestId（请求的Id）
- * body（object类型数据）
+ * 4Byte magic number（魔法数）  1Byte version（版本）     1Byte compress（压缩类型）  1Byte codec（序列化类型）
+ * 1Byte messageType（消息类型） 4Byte messageId（消息Id） 4Byte dataLength（消息长度）data（object类型数据）
  * </pre>
  * <p>
- * {@link LengthFieldBasedFrameDecoder} is a length-based decoder , used to solve TCP unpacking and sticking problems.
+ * {@link LengthFieldBasedFrameDecoder} 是一个基于长度域的解码器，用于解决TCP沾包问题（不用我们手动处理）。
  * </p>
  *
  * @author Star Zheng
- * @see <a href="https://zhuanlan.zhihu.com/p/95621344">LengthFieldBasedFrameDecoder解码器</a>
+ * @see <a href="https://wenjie.store/archives/about-decoder-4">LengthFieldBasedFrameDecoder解码器</a>
  */
 @Slf4j
 public final class NettyCodecAdapter {
@@ -60,7 +63,6 @@ public final class NettyCodecAdapter {
         return decoder;
     }
 
-
     private Codec getCodec(String codecName) {
         ExtensionLoader<Codec> loader = ExtensionLoader.getExtensionLoader(Codec.class);
         if (loader.hasExtension(codecName)) {
@@ -74,62 +76,59 @@ public final class NettyCodecAdapter {
         @Override
         protected void encode(ChannelHandlerContext ctx, Message message, ByteBuf out) {
             try {
-                // TODO 重写这部分
-                out.writeBytes(CodecConstants.MAGIC);
-                out.writeByte(CodecConstants.VERSION);
-                // leave a place to write the value of full length
-                out.writerIndex(out.writerIndex() + 4);
-                out.writeByte(message.getMType());
-                out.writeByte(message.getCodec());
-                out.writeByte(message.getCompress());
-                out.writeInt(message.getMId());
-                // build full length
-                byte[] bodyBytes = null;
-                // fullLength = head length + body length
-                int fullLength = CodecConstants.HEAD_LENGTH;
-                // 如果messageType不是 heartbeat message，则处理数据
-                if (message.getMType() != MessageType.HEARTBEAT.getCode()) {
+                // 1. header
+                byte[] header = Bytes.copyOf(MAGIC_NUM, HEAD_LENGTH);
+                // 设置 version, compress, codec, message type
+                header[4] = VERSION;
+                header[5] = message.getCompress();
+                header[6] = message.getCodec();
+                header[7] = message.getMsgType();
+                // 设置 message id
+                Bytes.int2bytes(message.getMsgId(), header, 8);
+
+                // 2. encode request data
+                byte[] dataBytes = null;
+                // 如果是心跳数据，则不进行处理
+                if (message.getMsgType() != MessageType.HEARTBEAT.getCode()) {
                     // serialize the object
-                    log.info("codec name: [{}] ", message.getCodec());
-                    //bodyBytes = codec.encode(message.getData(), SerializationType.getName(message.getCodec()));
-                    bodyBytes = JSON.toJSONBytes(message.getData());
+                    dataBytes = codec.encode(message.getData(), message.getCodec());
                     // TODO 调整 compress the bytes
                     //String compressName = CompressType.getName(message.getCompress());
                     //Compressor compressor = ExtensionLoader.getExtensionLoader(Compressor.class)
                     //        .getExtension(compressName);
                     //bodyBytes = compressor.compress(bodyBytes);
-                    fullLength += bodyBytes.length;
+                    //fullLength += bodyBytes.length;
                 }
-
-                if (bodyBytes != null) {
-                    out.writeBytes(bodyBytes);
+                // 数据长度
+                int dataLen = dataBytes != null ? dataBytes.length : 0;
+                Bytes.int2bytes(dataLen, header, 12);
+                // 3. 写入ByteBuf
+                out.writeBytes(header);
+                if (dataBytes != null) {
+                    out.writeBytes(dataBytes);
                 }
-                int writeIndex = out.writerIndex();
-                // 将索引位置重置到 fullLength 位置处，
-                out.writerIndex(writeIndex - fullLength + CodecConstants.MAGIC.length + CodecConstants.VERSION);
-                out.writeInt(fullLength);
-                out.writerIndex(writeIndex);
             } catch (Exception e) {
                 log.error("Encode request error!", e);
             }
         }
+
     }
 
     private class InternalDecoder extends LengthFieldBasedFrameDecoder {
         public InternalDecoder() {
-            // lengthFieldOffset: magic code is 4 bytes, and version is 1 byte, and then full length. so value is 5
-            // lengthFieldLength: full length is 4 byte. so value is 4
-            // lengthAdjustment: full length include all data and read 9 bytes before, so the left length is (fullLength-9). so values is -9
-            // initialBytesToStrip: we will check magic code and version manually, so do not strip any bytes. so values is 0
-            this(CodecConstants.MAX_FRAME_LENGTH, 5, 4, -9, 0);
+            // lengthFieldOffset: magic code is 4 bytes, and version, compress, codec, message type is 1 byte, and message id is 4 bytes, and then data length. so value is 12
+            // lengthFieldLength: data length is 4 byte. so value is 4.
+            // lengthAdjustment: data length is actual length, so values is 0.
+            // initialBytesToStrip: we need get all data, so value is 0.
+            this(CodecConstants.MAX_FRAME_LENGTH, 12, 4, 0, 0);
         }
 
         /**
          * @param maxFrameLength      Maximum frame length. It decide the maximum length of data that can be received.
-         *                            If it exceeds, the data will be discarded.
+         *                            If it exceeds, the data will be discarded, and throw TooLongFrameException.
          * @param lengthFieldOffset   Length field offset. The length field is the one that skips the specified length of byte.
-         * @param lengthFieldLength   The number of bytes in the length field.
-         * @param lengthAdjustment    The compensation value to add to the value of the length field
+         * @param lengthFieldLength   The number of bytes in the length field.（此属性的值是数据长度）
+         * @param lengthAdjustment    The compensation value to add to the value of the length field.（数据长度 + lengthAdjustment = 数据总长度）
          * @param initialBytesToStrip Number of bytes skipped.
          *                            If you need to receive all of the header+body data, this value is 0
          *                            if you only want to receive the body data, then you need to skip the number of bytes consumed by the header.
@@ -143,73 +142,75 @@ public final class NettyCodecAdapter {
         protected Object decode(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
             Object decoded = super.decode(ctx, in);
             if (decoded instanceof ByteBuf) {
-                ByteBuf frame = (ByteBuf) decoded;
-                if (frame.readableBytes() >= CodecConstants.HEAD_LENGTH) {
-                    try {
-                        return decodeFrame(frame);
-                    } catch (Exception e) {
-                        // TODO 如果异常了，设置 Bad Request
-                        log.error("Decode frame error!", e);
-                        throw e;
-                    } finally {
-                        frame.release();
-                    }
+                ByteBuf data = (ByteBuf) decoded;
+                if (data.readableBytes() < HEAD_LENGTH) {
+                    return decoded;
                 }
 
+                try {
+                    return decodeData(data);
+                } catch (Exception e) {
+                    // TODO 如果异常了，设置 Bad Request
+                    log.error("Decode frame error!", e);
+                    throw e;
+                } finally {
+                    data.release();
+                }
             }
             return decoded;
         }
 
-        private Message decodeFrame(ByteBuf in) {
-            // 这里必须按顺序读取 ByteBuf
-            checkMagicNumber(in);
-            checkVersion(in);
-            // TODO 重写 Header 获取
-            int fullLength = in.readInt();
-            byte messageType = in.readByte();
-            byte codecType = in.readByte();
-            byte compressType = in.readByte();
-            int messageId = in.readInt();
+        private Message decodeData(ByteBuf in) {
+            // 读取header
+            byte[] header = new byte[HEAD_LENGTH];
+            in.readBytes(header);
+            // check magic num
+            byte[] magicNum = Bytes.copyOf(header, 4);
+            checkMagicNum(magicNum);
+            // check version
+            if (header[5] != VERSION) {
+               throw new IllegalStateException("Versions are not consistent, ");
+            }
+
+            byte compressType = header[5];
+            byte codecType = header[6];
+            byte messageType = header[7];
+            int messageId = Bytes.bytes2int(header, 8);
+            int dataLength = Bytes.bytes2int(header, 12);
+            // 构建消息体
             Message message = new Message(messageId, messageType, codecType, compressType);
             if (messageType == MessageType.HEARTBEAT.getCode()) {
                 message.setData(CommonConstants.HEARTBEAT_EVENT);
                 return message;
             }
-            int bodyLength = fullLength - CodecConstants.HEAD_LENGTH;
-            if (bodyLength > 0) {
-                byte[] dataBytes = new byte[bodyLength];
-                in.readBytes(dataBytes);
-                // decompress the bytes
-                //String compressName = CompressType.getName(compressType);
-                //Compressor compressor = ExtensionLoader.getExtensionLoader(Compressor.class)
-                //        .getExtension(compressName);
-                //dataBytes = compressor.decompress(dataBytes);
-                // deserialize the object
-                log.info("codec name: [{}] ", message.getCodec());
-                //Object data = codec.decode(dataBytes, SerializationType.getName(message.getCodec()));
-
-                message.setData(new String(dataBytes));
+            if (dataLength <= 0) {
+                return message;
             }
+            // 解析数据
+            byte[] dataBytes = new byte[dataLength];
+            in.readBytes(dataBytes);
+            // 解压数据
+            //String compressName = CompressType.getName(compressType);
+            //Compressor compressor = ExtensionLoader.getExtensionLoader(Compressor.class)
+            //        .getExtension(compressName);
+            //dataBytes = compressor.decompress(dataBytes);
+            // 反序列化对象
+            log.info("Codec name: [{}] ", message.getCodec());
+            Class<?> dataClass = messageType == MessageType.REQUEST.getCode() ? Request.class : Response.class;
+            Object data = codec.decode(dataBytes, dataClass, message.getCodec());
+            message.setData(data);
+
             return message;
-
         }
 
-        private void checkVersion(ByteBuf in) {
-            // 读取version，并进行比较
-            byte version = in.readByte();
-            if (version != CodecConstants.VERSION) {
-                throw new RuntimeException("version isn't compatible" + version);
+        private void checkMagicNum(byte[] magic) {
+            if (magic.length != MAGIC_NUM.length) {
+                throw new IllegalArgumentException("Unknown magic code: " + Arrays.toString(magic));
             }
-        }
-
-        private void checkMagicNumber(ByteBuf in) {
-            //
-            int len = CodecConstants.MAGIC.length;
-            byte[] tmp = new byte[len];
-            in.readBytes(tmp);
+            int len = MAGIC_NUM.length;
             for (int i = 0; i < len; i++) {
-                if (tmp[i] != CodecConstants.MAGIC[i]) {
-                    throw new IllegalArgumentException("Unknown magic code: " + Arrays.toString(tmp));
+                if (magic[i] != MAGIC_NUM[i]) {
+                    throw new IllegalArgumentException("Unknown magic code: " + Arrays.toString(magic));
                 }
             }
         }

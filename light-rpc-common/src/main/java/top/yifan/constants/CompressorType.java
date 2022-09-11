@@ -3,25 +3,28 @@ package top.yifan.constants;
 /**
  * @author Star Zheng
  */
-public enum CompressType {
+public enum CompressorType {
 
-    GZIP((byte) 0x01, "gzip");
+    IDENTITY((byte) 0x00, "identity"),
+    GZIP((byte) 0x01, "gzip"),
+    BZIP2((byte) 0x02, "bzip2"),
+    SNAPPY((byte) 0x03, "snappy");
 
     private final byte code;
     private final String name;
 
-    CompressType(byte code, String name) {
+    CompressorType(byte code, String name) {
         this.code = code;
         this.name = name;
     }
 
     public static String getName(byte code) {
-        for (CompressType c : CompressType.values()) {
+        for (CompressorType c : CompressorType.values()) {
             if (c.code == code) {
                 return c.name;
             }
         }
-        return null;
+        return IDENTITY.getName();
     }
 
     public byte getCode() {

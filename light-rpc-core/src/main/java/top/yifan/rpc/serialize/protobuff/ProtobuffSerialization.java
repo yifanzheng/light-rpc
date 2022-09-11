@@ -7,6 +7,7 @@ import io.protostuff.runtime.RuntimeSchema;
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import top.yifan.constants.SerializationType;
+import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.serialize.Serialization;
 
 import java.util.Map;
@@ -22,8 +23,8 @@ public class ProtobuffSerialization implements Serialization {
     private final Map<Class<?>, Schema<?>> schemaCache = new ConcurrentHashMap<>();
 
     @Override
-    public SerializationType getType() {
-        return SerializationType.PROTOSTUFF;
+    public byte getSerializeId() {
+        return SerializationType.PROTOSTUFF.getCode();
     }
 
     @Override
@@ -59,4 +60,5 @@ public class ProtobuffSerialization implements Serialization {
         }
         return schema;
     }
+
 }

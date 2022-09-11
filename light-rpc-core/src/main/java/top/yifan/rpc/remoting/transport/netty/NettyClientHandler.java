@@ -2,7 +2,6 @@ package top.yifan.rpc.remoting.transport.netty;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.timeout.IdleState;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -33,13 +32,12 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
             log.info("Client receive msg: [{}]", msg);
             if (msg instanceof Message) {
                 Message responseMsg = (Message) msg;
-                byte messageType = responseMsg.getMType();
+                byte messageType = responseMsg.getMsgType();
                 if (messageType == MessageType.HEARTBEAT.getCode()) {
                     log.info("Heartbeat [{}]", responseMsg.getData());
                     return;
                 }
                 if (messageType == MessageType.RESPONSE.getCode()) {
-                    System.out.println("client recve: " + responseMsg.getData());
                     DefaultExchangeFuture.sent((Response) responseMsg.getData());
                 }
             }
@@ -71,9 +69,9 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
             }
             // 构建消息体
             Message message = new Message();
-            message.setMType(MessageType.HEARTBEAT.getCode());
+            message.setMsgType(MessageType.HEARTBEAT.getCode());
             message.setCodec(SerializationType.PROTOSTUFF.getCode());
-            message.setCompress(CompressType.GZIP.getCode());
+            message.setCompress(CompressorType.GZIP.getCode());
             message.setData(CommonConstants.HEARTBEAT_EVENT);
             channel.send(message);
 

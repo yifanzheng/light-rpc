@@ -8,6 +8,8 @@ import top.yifan.extension.SPI;
 @SPI
 public interface Compressor {
 
+    byte compressorId();
+
     byte[] compress(byte[] data);
     byte[] decompress(byte[] data);
 }

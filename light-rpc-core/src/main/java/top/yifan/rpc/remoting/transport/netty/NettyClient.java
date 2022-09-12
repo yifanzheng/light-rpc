@@ -86,7 +86,7 @@ public class NettyClient extends AbstractClient {
 
         Message message = new Message();
         message.setMsgType(MessageType.REQUEST.getCode());
-        message.setCodec(SerializationType.KYRO.getCode());
+        message.setCodec(SerializationType.KRYO.getCode());
         message.setCompress(CompressorType.SNAPPY.getCode());
         message.setData(request);
         // 发送请求

@@ -1,4 +1,4 @@
-package top.yifan.rpc.serialize.kyro;
+package top.yifan.rpc.serialize.kryo;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
@@ -17,7 +17,7 @@ import java.io.ByteArrayOutputStream;
  *
  * @author Star Zheng
  */
-public class KyroSerialization implements Serialization {
+public class KryoSerialization implements Serialization {
 
     /**
      * 由于Kyro不是线程安全的，所以使用ThreadLocal存储
@@ -33,7 +33,7 @@ public class KyroSerialization implements Serialization {
 
     @Override
     public byte getSerializeId() {
-        return SerializationType.KYRO.getCode();
+        return SerializationType.KRYO.getCode();
     }
 
     @Override

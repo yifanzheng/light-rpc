@@ -7,7 +7,7 @@ package top.yifan.constants;
  */
 public enum SerializationType {
 
-    KYRO((byte) 0x01, "kyro"),
+    KRYO((byte) 0x01, "kryo"),
     PROTOSTUFF((byte) 0x02, "protostuff"),
     HESSIAN2((byte) 0X03, "hessian2"),
     JSON((byte) 0X04, "json");

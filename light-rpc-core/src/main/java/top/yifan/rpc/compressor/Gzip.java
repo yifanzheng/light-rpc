@@ -4,6 +4,7 @@ import top.yifan.constants.CompressorType;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -23,15 +24,13 @@ public class Gzip implements Compressor {
         if (dataByteArr == null || dataByteArr.length == 0) {
             return new byte[0];
         }
-
-        try (ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
-             GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteOutStream)) {
+        ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(byteOutStream)) {
             gzipOutputStream.write(dataByteArr);
-
-            return byteOutStream.toByteArray();
         } catch (Exception exception) {
             throw new IllegalStateException(exception);
         }
+        return byteOutStream.toByteArray();
     }
 
     @Override
@@ -44,11 +43,10 @@ public class Gzip implements Compressor {
              ByteArrayOutputStream byteOutStream = new ByteArrayOutputStream();
              GZIPInputStream gzipInputStream = new GZIPInputStream(byteInStream)) {
             int readByteNum;
-            byte[] bufferArr = new byte[256];
+            byte[] bufferArr = new byte[512];
             while ((readByteNum = gzipInputStream.read(bufferArr)) >= 0) {
                 byteOutStream.write(bufferArr, 0, readByteNum);
             }
-
             return byteOutStream.toByteArray();
         } catch (Exception exception) {
             throw new IllegalStateException(exception);

@@ -42,14 +42,15 @@ public class Bzip2 implements Compressor {
         if (dataByteArr == null || dataByteArr.length == 0) {
             return new byte[0];
         }
-        try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-             BZip2CompressorOutputStream cos = new BZip2CompressorOutputStream(out)) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try (BZip2CompressorOutputStream cos = new BZip2CompressorOutputStream(out)) {
             cos.write(dataByteArr);
-
-            return out.toByteArray();
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
+        // 这里需要特别注意：要在BZip2输出流关闭之后才能返回，因为BZip2在关闭时会写入特定的字节码，
+        // 如果在close之前返回，则数据是不完整的，在解压时会报错
+        return out.toByteArray();
     }
 
     @Override

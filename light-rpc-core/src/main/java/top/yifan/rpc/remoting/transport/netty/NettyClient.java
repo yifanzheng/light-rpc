@@ -87,7 +87,7 @@ public class NettyClient extends AbstractClient {
         Message message = new Message();
         message.setMsgType(MessageType.REQUEST.getCode());
         message.setCodec(SerializationType.KYRO.getCode());
-        message.setCompress(CompressorType.GZIP.getCode());
+        message.setCompress(CompressorType.SNAPPY.getCode());
         message.setData(request);
         // 发送请求
         nettyChannel.send(message, 30000);
@@ -100,9 +100,9 @@ public class NettyClient extends AbstractClient {
         eventLoopGroup = createEventLoopGroup();
         bootstrap.group(eventLoopGroup)
                 .channel(NettyEventLoopFactory.socketChannelClass())
-                // TCP默认开启了 Nagle 算法，该算法的作用是尽可能的发送大数据块，减少网络传输。TCP_NODELAY 参数的作用就是控制是否启用 Nagle 算法。
+                // TCP默认开启了Nagle算法，该算法的作用是尽可能的发送大数据块，减少网络传输。TCP_NODELAY 参数的作用就是控制是否启用 Nagle 算法。
                 .option(ChannelOption.TCP_NODELAY, Boolean.TRUE)
-                // 是否开启 TCP 底层心跳机制
+                // 是否开启TCP底层心跳机制
                 .option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 // The timeout period of the connection.

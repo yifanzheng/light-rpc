@@ -12,6 +12,8 @@ import top.yifan.constants.MessageType;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.io.Bytes;
 import top.yifan.rpc.codec.Codec;
+import top.yifan.rpc.compressor.Compressor;
+import top.yifan.rpc.compressor.CompressorSupport;
 import top.yifan.rpc.exchange.Message;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
@@ -90,19 +92,15 @@ public final class NettyCodecAdapter {
                 byte[] dataBytes = null;
                 // 如果是心跳数据，则不进行处理
                 if (message.getMsgType() != MessageType.HEARTBEAT.getCode()) {
-                    // serialize the object
+                    // 序列化对象
                     dataBytes = codec.encode(message.getData(), message.getCodec());
-                    // TODO 调整 compress the bytes
-                    //String compressName = CompressType.getName(message.getCompress());
-                    //Compressor compressor = ExtensionLoader.getExtensionLoader(Compressor.class)
-                    //        .getExtension(compressName);
-                    //bodyBytes = compressor.compress(bodyBytes);
-                    //fullLength += bodyBytes.length;
+                    // 压缩数据
+                    dataBytes = CompressorSupport.getCompressor(message.getCompress()).compress(dataBytes);
                 }
                 // 数据长度
                 int dataLen = dataBytes != null ? dataBytes.length : 0;
                 Bytes.int2bytes(dataLen, header, 12);
-                // 3. 写入ByteBuf
+                // 3. 将header与request data写入ByteBuf
                 out.writeBytes(header);
                 if (dataBytes != null) {
                     out.writeBytes(dataBytes);
@@ -124,17 +122,15 @@ public final class NettyCodecAdapter {
         }
 
         /**
-         * @param maxFrameLength      Maximum frame length. It decide the maximum length of data that can be received.
-         *                            If it exceeds, the data will be discarded, and throw TooLongFrameException.
-         * @param lengthFieldOffset   Length field offset. The length field is the one that skips the specified length of byte.
+         * @param maxFrameLength      最大数据帧长度。如果接收的数据超过此长度，数据将被丢弃，并抛出 TooLongFrameException。
+         * @param lengthFieldOffset   长度域偏移量。 The length field is the one that skips the specified length of byte.
          * @param lengthFieldLength   The number of bytes in the length field.（此属性的值是数据长度）
          * @param lengthAdjustment    The compensation value to add to the value of the length field.（数据长度 + lengthAdjustment = 数据总长度）
          * @param initialBytesToStrip Number of bytes skipped.
          *                            If you need to receive all of the header+body data, this value is 0
          *                            if you only want to receive the body data, then you need to skip the number of bytes consumed by the header.
          */
-        public InternalDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength,
-                               int lengthAdjustment, int initialBytesToStrip) {
+        public InternalDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
             super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip);
         }
 
@@ -168,8 +164,8 @@ public final class NettyCodecAdapter {
             byte[] magicNum = Bytes.copyOf(header, 4);
             checkMagicNum(magicNum);
             // check version
-            if (header[5] != VERSION) {
-               throw new IllegalStateException("Versions are not consistent, ");
+            if (header[4] != VERSION) {
+                throw new IllegalStateException("Versions are not consistent, expect version: [" + VERSION + "], actual version: [" + header[4] + "]");
             }
 
             byte compressType = header[5];
@@ -190,10 +186,7 @@ public final class NettyCodecAdapter {
             byte[] dataBytes = new byte[dataLength];
             in.readBytes(dataBytes);
             // 解压数据
-            //String compressName = CompressType.getName(compressType);
-            //Compressor compressor = ExtensionLoader.getExtensionLoader(Compressor.class)
-            //        .getExtension(compressName);
-            //dataBytes = compressor.decompress(dataBytes);
+            dataBytes = CompressorSupport.getCompressor(compressType).decompress(dataBytes);
             // 反序列化对象
             log.info("Codec name: [{}] ", message.getCodec());
             Class<?> dataClass = messageType == MessageType.REQUEST.getCode() ? Request.class : Response.class;

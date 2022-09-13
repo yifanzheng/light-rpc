@@ -18,7 +18,7 @@ public class RpcRequestHandler {
 
     public Object handler(Request request) {
         try {
-            // TODO 配置中心获取
+            // TODO 配置中心获取对象
             // 获取指定服务，并执行指定方法
             Object obj = Class.forName(DemoServiceImpl.class.getName()).newInstance();
             Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());

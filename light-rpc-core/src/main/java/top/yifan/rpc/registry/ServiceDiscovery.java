@@ -9,5 +9,5 @@ import java.util.List;
  */
 public interface ServiceDiscovery {
 
-    List<String> lookup();
+    List<String> lookup(String rpcServiceName);
 }

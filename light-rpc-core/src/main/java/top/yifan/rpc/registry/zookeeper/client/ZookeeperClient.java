@@ -1,4 +1,4 @@
-package top.yifan.rpc.registry.zookeeper;
+package top.yifan.rpc.registry.zookeeper.client;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.RetryPolicy;
@@ -23,6 +23,9 @@ public class ZookeeperClient implements Closeable {
 
     private static final Logger log = LoggerFactory.getLogger(ZookeeperClient.class);
 
+    private static final int SESSION_TIMEOUT_MS = 30 * 1000;
+    private static final int CONNECTION_TIMEOUT_MS = 10 * 1000;
+
     private final String connectString;
 
     private CuratorFramework client;
@@ -43,14 +46,14 @@ public class ZookeeperClient implements Closeable {
         // 以下 Zookeeper 连接配置在实际开发中，可从配置文件中获取
         CuratorFramework zkClient = CuratorFrameworkFactory.builder()
                 .connectString(connectString)
-                .sessionTimeoutMs(30000)
-                .connectionTimeoutMs(10000)
+                .sessionTimeoutMs(SESSION_TIMEOUT_MS)
+                .connectionTimeoutMs(CONNECTION_TIMEOUT_MS)
                 .retryPolicy(retryPolicy)
                 .build();
         zkClient.start();
         try {
             // 阻塞直到连接成功
-            zkClient.blockUntilConnected(10000, TimeUnit.MILLISECONDS);
+            zkClient.blockUntilConnected(CONNECTION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             if (!zkClient.getState().equals(CuratorFrameworkState.STARTED)) {
                 throw new IllegalStateException("Zookeeper client initialization failed");
             }

@@ -12,6 +12,9 @@
     <modules>
         <module>light-rpc-common</module>
         <module>light-rpc-core</module>
+        <module>light-rpc-example-client</module>
+        <module>light-rpc-example-server</module>
+        <module>light-rpc-example-api</module>
     </modules>
 
     <properties>

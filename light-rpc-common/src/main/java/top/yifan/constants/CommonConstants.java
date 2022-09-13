@@ -7,6 +7,10 @@ package top.yifan.constants;
  */
 public class CommonConstants {
 
+    private CommonConstants() {
+
+    }
+
     public static final String OS_NAME_KEY = "os.name";
     public static final String OS_LINUX_PREFIX = "linux";
     public static final String NETTY_EPOLL_ENABLE_KEY = "netty.epoll.enable";
@@ -15,4 +19,6 @@ public class CommonConstants {
     public static final int DEFAULT_HEARTBEAT = 60 * 1000;
 
     public static final String HEARTBEAT_EVENT = null;
+
+    public static final String ZK_ROOT = "/rpc";
 }

@@ -22,11 +22,11 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
 
     public ZookeeperServiceRegistry() {
         // TODO 完善
-        InputStream stream = this.getClass().getResourceAsStream("");
-        Properties properties =new Properties();
-        properties.load(stream);
-        String zkAddress = properties.getProperty("rpc.zookeeper.address");
-        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect(zkAddress);
+        //InputStream stream = this.getClass().getResourceAsStream("");
+        //Properties properties =new Properties();
+        //properties.load(stream);
+        //String zkAddress = properties.getProperty("rpc.zookeeper.address");
+        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect("");
     }
 
     @Override

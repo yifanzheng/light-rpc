@@ -3,6 +3,8 @@ package top.yifan.rpc.handler;
 import top.yifan.rpc.example.DemoServiceImpl;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.rpc.provider.ServiceProvider;
+import top.yifan.rpc.provider.ZookeeperServiceProvider;
 
 import java.lang.reflect.Method;
 
@@ -13,14 +15,16 @@ import java.lang.reflect.Method;
  */
 public class RpcRequestHandler {
 
+    private final ServiceProvider serviceProvider;
+
     private RpcRequestHandler() {
+        serviceProvider = new ZookeeperServiceProvider();
     }
 
     public Object handler(Request request) {
         try {
-            // TODO 配置中心获取对象
             // 获取指定服务，并执行指定方法
-            Object obj = Class.forName(DemoServiceImpl.class.getName()).newInstance();
+            Object obj = serviceProvider.getService(request.getRpcServiceName());
             Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
             method.setAccessible(true);
             Object result = method.invoke(obj, request.getParameters());

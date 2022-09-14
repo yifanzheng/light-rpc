@@ -81,12 +81,12 @@ public class ZookeeperTemplate {
         }
     }
 
-    public Closeable watchChildrenForNodePath(String nodePath, Consumer<List<String>> listConsumer) throws Exception {
+    public Closeable watchChildrenForNodePath(String nodePath, Consumer<List<String>> listChildren) throws Exception {
         // 监听所有子节点变化
         PathChildrenCache cache = new PathChildrenCache(client, nodePath, true);
         cache.getListenable().addListener((curatorFramework, event) -> {
             List<String> childNodes = curatorFramework.getChildren().forPath(nodePath);
-            listConsumer.accept(childNodes);
+            listChildren.accept(childNodes);
         });
         cache.start();
         return cache;

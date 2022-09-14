@@ -1,5 +1,7 @@
 package top.yifan.rpc.registry.zookeeper;
 
+import com.google.common.collect.Interner;
+import com.google.common.collect.Interners;
 import top.yifan.rpc.registry.ServiceDiscovery;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
 import top.yifan.util.URLUtil;
@@ -34,19 +36,18 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     private List<String> listServiceEndpoints(String rpcServiceName) {
-
-        synchronized (rpcServiceName) {
-
+        String lock = ZKServiceDiscoveryLock.buildLock(rpcServiceName);
+        synchronized (lock) {
+            if (SERVICE_ADDRESS_MAP.containsKey(rpcServiceName)) {
+                return SERVICE_ADDRESS_MAP.get(rpcServiceName);
+            }
+            // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
+            String serviceNodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName);
+            List<String> serviceEndpoints = zookeeperTemplate.getChildren(serviceNodePath);
+            // 注册服务监听器
+            registerNodeWacher(serviceNodePath, rpcServiceName);
+            return serviceEndpoints;
         }
-        if (SERVICE_ADDRESS_MAP.containsKey(rpcServiceName)) {
-            return SERVICE_ADDRESS_MAP.get(rpcServiceName);
-        }
-        // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
-        String serviceNodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName);
-        List<String> serviceEndpoints = zookeeperTemplate.getChildren(serviceNodePath);
-        // 注册服务监听器
-        registerNodeWacher(serviceNodePath, rpcServiceName);
-        return serviceEndpoints;
     }
 
     private void registerNodeWacher(String serviceNodePath, String rpcServiceName) {

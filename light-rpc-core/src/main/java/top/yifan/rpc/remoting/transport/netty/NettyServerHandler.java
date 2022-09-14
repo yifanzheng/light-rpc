@@ -65,7 +65,7 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
         if (requestMsg.getMsgType() == MessageType.REQUEST.getCode()) {
             mType = MessageType.RESPONSE;
             // 处理Client Request
-            data = rpcRequestHandler.handler(JSON.parseObject(JSON.toJSONString(requestMsg.getData()), Request.class));
+            data = rpcRequestHandler.handler((Request) requestMsg.getData());
         } else { // Heartbeat
             mType = MessageType.HEARTBEAT;
             data = CommonConstants.HEARTBEAT_EVENT;

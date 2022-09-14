@@ -30,4 +30,8 @@ public class Request implements Serializable {
     public Request() {
         this.requestId = IDGeneratorUtil.generateUUID();
     }
+
+    public String getRpcServiceName() {
+        return this.getClassName() + this.getGroup() + this.getVersion();
+    }
 }

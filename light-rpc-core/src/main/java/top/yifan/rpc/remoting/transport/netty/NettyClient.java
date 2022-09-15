@@ -15,11 +15,13 @@ import top.yifan.rpc.exchange.DefaultExchangeFuture;
 import top.yifan.rpc.exchange.Message;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.remoting.transport.AbstractClient;
 
 import java.net.InetSocketAddress;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static top.yifan.constants.CommonConstants.*;
 
 /**
  * @author Star Zheng
@@ -37,8 +39,8 @@ public class NettyClient extends AbstractClient {
 
     public Channel doConnect(InetSocketAddress address) throws Exception {
         ChannelFuture channelFuture = bootstrap.connect(address);
-        // TODO connectTimeout 由配置信息传入
-        boolean connected = channelFuture.awaitUninterruptibly(60000, MILLISECONDS);
+        boolean connected = channelFuture.awaitUninterruptibly(getConnectionTimeout(), MILLISECONDS);
+
         if (connected && channelFuture.isSuccess()) {
             log.info("The client has connected [{}] success.", address.toString());
             return channelFuture.channel();
@@ -69,25 +71,24 @@ public class NettyClient extends AbstractClient {
     }
 
     @Override
-    protected Response doSend(Request request) throws Exception {
-        InetSocketAddress inetSocketAddress = new InetSocketAddress("127.0.0.1", 8080);
-        NettyChannel nettyChannel = NettyChannel.getOrNewChannel(inetSocketAddress, () -> {
+    protected Response doSend(InetSocketAddress serviceAddress, Request request) throws Exception {
+        NettyChannel nettyChannel = NettyChannel.getOrNewChannel(serviceAddress, () -> {
             try {
-                return doConnect(inetSocketAddress);
+                return doConnect(serviceAddress);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         });
         if (!nettyChannel.isActive()) {
-            throw new RemotingException("Failed to send message, cause: Channel inactive, channel: -> " + inetSocketAddress);
+            throw new RemotingException("Failed to send message, cause: Channel inactive, channel: -> " + serviceAddress);
         }
-        // 结果回调Future
+        // 创建结果回调Future
         DefaultExchangeFuture resultFuture = DefaultExchangeFuture.newFuture(request.getRequestId());
-
+        // 构建消息体
         Message message = new Message();
         message.setMsgType(MessageType.REQUEST.getCode());
-        message.setCodec(SerializationType.KRYO.getCode());
-        message.setCompress(CompressorType.SNAPPY.getCode());
+        message.setCodec(getCodec().getCode());
+        message.setCompress(getCompressor().getCode());
         message.setData(request);
         // 发送请求
         nettyChannel.send(message, 30000);
@@ -98,13 +99,11 @@ public class NettyClient extends AbstractClient {
     private void initBootstrap(NettyClientHandler nettyClientHandler) {
         bootstrap = new Bootstrap();
         eventLoopGroup = createEventLoopGroup();
-        bootstrap.group(eventLoopGroup)
-                .channel(NettyEventLoopFactory.socketChannelClass())
+        bootstrap.group(eventLoopGroup).channel(NettyEventLoopFactory.socketChannelClass())
                 // TCP默认开启了Nagle算法，该算法的作用是尽可能的发送大数据块，减少网络传输。TCP_NODELAY 参数的作用就是控制是否启用 Nagle 算法。
                 .option(ChannelOption.TCP_NODELAY, Boolean.TRUE)
                 // 是否开启TCP底层心跳机制
-                .option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE)
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.SO_KEEPALIVE, Boolean.TRUE).option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 // The timeout period of the connection.
                 // If this time is exceeded or the connection cannot be established, the connection fails.
                 .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5000);
@@ -115,17 +114,28 @@ public class NettyClient extends AbstractClient {
                 NettyCodecAdapter codec = new NettyCodecAdapter(CodecConstants.CODEC_TRANSPROT);
                 channel.pipeline()
                         // for debug
-                        .addLast("logging", new LoggingHandler(LogLevel.INFO))
-                        .addLast("decoder", codec.getDecoder())
-                        .addLast("encoder", codec.getEncoder())
+                        .addLast("logging", new LoggingHandler(LogLevel.INFO)).addLast("decoder", codec.getDecoder()).addLast("encoder", codec.getEncoder())
                         // If no data is read to the server within 60 seconds, a heartbeat request is sent
-                        .addLast("client-idle-handler", new IdleStateHandler(60 * 1000, 0, 0, MILLISECONDS))
-                        .addLast("handler", nettyClientHandler);
+                        .addLast("client-idle-handler", new IdleStateHandler(60 * 1000, 0, 0, MILLISECONDS)).addLast("handler", nettyClientHandler);
             }
         });
     }
 
     private EventLoopGroup createEventLoopGroup() {
         return NettyEventLoopFactory.eventLoopGroup(CommonConstants.DEFAULT_IO_THREADS, "NettyClientWorker");
+    }
+
+    private int getConnectionTimeout() {
+        return RpcProperties.getParameter(CLIENT_CONNECTION_TIMEOUT_KEY, DEFAULT_CLIENT_CONNECTION_TIMEOUT);
+    }
+
+    private SerializationType getCodec() {
+        String codec = RpcProperties.getParameter(REMOTE_CODEC_KEY, DEFAULT_REMOTE_CODEC);
+        return SerializationType.getInstance(codec);
+    }
+
+    private CompressorType getCompressor() {
+        String compress = RpcProperties.getParameter(REMOTE_COMPRESS_KEY, DEFAULT_REMOTE_COMPRESS);
+        return CompressorType.getInstance(compress);
     }
 }

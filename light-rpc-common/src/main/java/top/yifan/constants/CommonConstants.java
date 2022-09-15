@@ -21,4 +21,18 @@ public class CommonConstants {
     public static final String HEARTBEAT_EVENT = null;
 
     public static final String ZK_ROOT = "/rpc";
+
+    public static final String REGISTRY_PROTOCOL_KEY = "rpc.registry.protocol";
+    public static final String DEFAULT_REGISTRY_PROTOCOL = "zookeeper";
+
+    public static final String CLIENT_CONNECTION_TIMEOUT_KEY = "rpc.client.connection.timeout";
+    public static final int DEFAULT_CLIENT_CONNECTION_TIMEOUT = 60000;
+
+    public static final String REMOTE_CODEC_KEY = "rpc.remote.codec";
+    public static final String DEFAULT_REMOTE_CODEC = "hessian2";
+
+    public static final String REMOTE_COMPRESS_KEY = "rpc.remote.compress";
+    public static final String DEFAULT_REMOTE_COMPRESS = "identity";
+
+
 }

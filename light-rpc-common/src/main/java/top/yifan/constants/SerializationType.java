@@ -1,5 +1,7 @@
 package top.yifan.constants;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * SerializationType
  *
@@ -24,6 +26,15 @@ public enum SerializationType {
         for (SerializationType c : SerializationType.values()) {
             if (c.getCode() == code) {
                 return c.name;
+            }
+        }
+        return null;
+    }
+
+    public static SerializationType getInstance(String name) {
+        for (SerializationType c : SerializationType.values()) {
+            if (StringUtils.equals(c.getName(), name)) {
+                return c;
             }
         }
         return null;

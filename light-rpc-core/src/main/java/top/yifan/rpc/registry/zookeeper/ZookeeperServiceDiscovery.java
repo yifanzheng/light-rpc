@@ -6,6 +6,7 @@ import top.yifan.rpc.registry.ServiceDiscovery;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
 import top.yifan.util.URLUtil;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +29,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public List<String> lookup(String rpcServiceName) {
+    public InetSocketAddress lookup(String rpcServiceName) {
         List<String> endpoints = listServiceEndpoints(rpcServiceName);
         // TODO loadbalance
 

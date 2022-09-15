@@ -1,5 +1,7 @@
 package top.yifan.constants;
 
+import org.apache.commons.lang3.StringUtils;
+
 /**
  * @author Star Zheng
  */
@@ -25,6 +27,15 @@ public enum CompressorType {
             }
         }
         return IDENTITY.getName();
+    }
+
+    public static CompressorType getInstance(String name) {
+        for (CompressorType c : CompressorType.values()) {
+            if (StringUtils.equals(c.getName(), name)) {
+                return c;
+            }
+        }
+        return IDENTITY;
     }
 
     public byte getCode() {

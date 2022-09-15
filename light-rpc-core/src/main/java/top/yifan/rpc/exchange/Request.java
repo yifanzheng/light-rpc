@@ -23,7 +23,6 @@ public class Request implements Serializable {
     private String methodName;
     private Class<?>[] paramTypes;
     private Object[] parameters;
-    // TODO 暂时不实现
     private String version;
     private String group;
 

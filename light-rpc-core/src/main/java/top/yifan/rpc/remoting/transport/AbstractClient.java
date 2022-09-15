@@ -2,14 +2,21 @@ package top.yifan.rpc.remoting.transport;
 
 import lombok.extern.slf4j.Slf4j;
 import top.yifan.exception.RemotingException;
+import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.rpc.registry.ServiceDiscovery;
+
+import java.net.InetSocketAddress;
+import java.util.List;
 
 /**
  * @author Star Zheng
  */
 @Slf4j
 public abstract class AbstractClient implements RemotingClient {
+
+    private final ServiceDiscovery serviceDiscovery;
 
     protected AbstractClient() throws RemotingException {
         try {
@@ -19,12 +26,13 @@ public abstract class AbstractClient implements RemotingClient {
             close();
             throw new RemotingException("Failed to start connect.", e);
         }
+        serviceDiscovery = ExtensionLoader.getExtensionLoader(ServiceDiscovery.class).getExtension("");
     }
 
     @Override
     public Response send(Request request) throws Exception {
-        // TODO loadbalance
-        return doSend(request);
+        InetSocketAddress serviceAddress = serviceDiscovery.lookup(request.getRpcServiceName());
+        return doSend(serviceAddress, request);
     }
 
     @Override
@@ -36,5 +44,5 @@ public abstract class AbstractClient implements RemotingClient {
 
     protected abstract void doClose();
 
-    protected abstract Response doSend(Request request) throws Exception;
+    protected abstract Response doSend(InetSocketAddress serviceAddress, Request request) throws Exception;
 }

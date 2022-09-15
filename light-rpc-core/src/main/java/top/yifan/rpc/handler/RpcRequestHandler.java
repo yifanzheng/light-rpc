@@ -1,15 +1,19 @@
 package top.yifan.rpc.handler;
 
-import top.yifan.rpc.example.DemoServiceImpl;
+import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.provider.ServiceProvider;
 import top.yifan.rpc.provider.ZookeeperServiceProvider;
 
 import java.lang.reflect.Method;
 
+import static top.yifan.constants.CommonConstants.DEFAULT_REGISTRY_PROTOCOL;
+import static top.yifan.constants.CommonConstants.REGISTRY_PROTOCOL_KEY;
+
 /**
- * TODO 完善 RpcRequestHandler
+ * RpcRequestHandler
  *
  * @author Star Zheng
  */
@@ -18,7 +22,8 @@ public class RpcRequestHandler {
     private final ServiceProvider serviceProvider;
 
     private RpcRequestHandler() {
-        serviceProvider = new ZookeeperServiceProvider();
+        String protocol = RpcProperties.getParameter(REGISTRY_PROTOCOL_KEY, DEFAULT_REGISTRY_PROTOCOL);
+        serviceProvider = ExtensionLoader.getExtensionLoader(ServiceProvider.class).getExtension(protocol);
     }
 
     public Object handler(Request request) {

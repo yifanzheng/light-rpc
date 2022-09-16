@@ -8,6 +8,7 @@ import top.yifan.rpc.config.ServiceConfig;
  * @author Star Zheng
  */
 public interface ServiceProvider {
+
     Object getService(String rpcServiceName);
 
     void publishService(ServiceConfig rpcServiceConfig);

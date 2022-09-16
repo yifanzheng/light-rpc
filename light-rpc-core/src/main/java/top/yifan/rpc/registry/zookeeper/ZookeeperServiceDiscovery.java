@@ -42,7 +42,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
             if (SERVICE_ADDRESS_MAP.containsKey(rpcServiceName)) {
                 return SERVICE_ADDRESS_MAP.get(rpcServiceName);
             }
-            // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
+            // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080/{weight}
             String serviceNodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName);
             List<String> serviceEndpoints = zookeeperTemplate.getChildren(serviceNodePath);
             // 注册服务监听器

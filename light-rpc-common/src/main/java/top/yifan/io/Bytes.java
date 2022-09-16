@@ -17,6 +17,7 @@
 package top.yifan.io;
 
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,6 +34,7 @@ public class Bytes {
 
     private static final Map<Integer, byte[]> DECODE_TABLE_MAP = new ConcurrentHashMap<>();
 
+    private static ThreadLocal<MessageDigest> MD = new ThreadLocal<>();
 
     private Bytes() {
     }
@@ -762,6 +764,34 @@ public class Bytes {
             b[w++] = (byte) ((c2 << 4) | (c3 >> 2));
         }
         return b;
+    }
+
+    public static byte[] getMD5(String str) {
+        return getMD5(str.getBytes());
+    }
+
+    /**
+     * get md5.
+     *
+     * @param source byte array source.
+     * @return MD5 byte array.
+     */
+    public static byte[] getMD5(byte[] source) {
+        MessageDigest md = getMessageDigest();
+        return md.digest(source);
+    }
+
+    private static MessageDigest getMessageDigest() {
+        MessageDigest ret = MD.get();
+        if (ret == null) {
+            try {
+                ret = MessageDigest.getInstance("MD5");
+                MD.set(ret);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return ret;
     }
 
     private static byte hex(char c) {

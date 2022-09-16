@@ -1,4 +1,4 @@
-package top.yifan.rpc.loadbalance;
+package top.yifan.rpc.domain;
 
 import lombok.Data;
 
@@ -21,6 +21,10 @@ public class Endpoint {
         this.weight = 1;
     }
 
+    public String getAddress() {
+        return host + ":" + port;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -34,8 +38,4 @@ public class Endpoint {
         return Objects.hash(host, port);
     }
 
-    @Override
-    public String toString() {
-        return host + ":" + port;
-    }
 }

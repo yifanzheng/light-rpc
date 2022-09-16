@@ -13,7 +13,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
- * refer to dubbo spi: https://dubbo.apache.org/zh-cn/docs/source_code_guide/dubbo-spi.html
+ * ExtensionLoader
+ * <p>
+ * refer to dubbo spi:
+ * https://github.com/apache/dubbo/blob/3.1/dubbo-common/src/main/java/org/apache/dubbo/common/extension/ExtensionLoader.java
  */
 @Slf4j
 public final class ExtensionLoader<T> {
@@ -21,6 +24,7 @@ public final class ExtensionLoader<T> {
     private static final Map<Class<?>, ExtensionLoader<?>> EXTENSION_LOADERS = new ConcurrentHashMap<>();
     private static final Map<Class<?>, Object> EXTENSION_INSTANCES = new ConcurrentHashMap<>();
     private final Class<?> type;
+    private String cachedDefaultName;
     private final Map<String, Holder<Object>> cachedInstances = new ConcurrentHashMap<>();
     private final Holder<Map<String, Class<?>>> cachedClasses = new Holder<>();
 
@@ -36,16 +40,29 @@ public final class ExtensionLoader<T> {
         if (!type.isInterface()) {
             throw new IllegalArgumentException("Extension type must be an interface.");
         }
-        if (type.getAnnotation(SPI.class) == null) {
+        if (!withExtensionAnnotation(type)) {
             throw new IllegalArgumentException("Extension type must be annotated by @SPI");
         }
         // firstly get from cache, if not hit, create one
         ExtensionLoader<S> extensionLoader = (ExtensionLoader<S>) EXTENSION_LOADERS.get(type);
         if (extensionLoader == null) {
-            EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<S>(type));
+            EXTENSION_LOADERS.putIfAbsent(type, new ExtensionLoader<>(type));
             extensionLoader = (ExtensionLoader<S>) EXTENSION_LOADERS.get(type);
         }
         return extensionLoader;
+    }
+
+    public T getOrDefaultExtension(String name) {
+        return containsExtension(name) ? getExtension(name) : getDefaultExtension();
+    }
+
+
+    public T getDefaultExtension() {
+        getExtensionClasses();
+        if (StringUtils.isBlank(cachedDefaultName) || "true".equals(cachedDefaultName)) {
+            return null;
+        }
+        return getExtension(cachedDefaultName);
     }
 
     @SuppressWarnings("unchecked")
@@ -86,6 +103,10 @@ public final class ExtensionLoader<T> {
         return Collections.unmodifiableSet(new TreeSet<>(classes.keySet()));
     }
 
+    private static boolean withExtensionAnnotation(Class<?> type) {
+        return type.isAnnotationPresent(SPI.class);
+    }
+
     @SuppressWarnings("unchecked")
     private T createExtension(String name) {
         // load all extension classes of type T from file and get specific one by name
@@ -103,6 +124,10 @@ public final class ExtensionLoader<T> {
             }
         }
         return instance;
+    }
+
+    private boolean containsExtension(String name) {
+        return getExtensionClasses().containsKey(name);
     }
 
     private Class<?> getExtensionClass(String name) {
@@ -123,6 +148,7 @@ public final class ExtensionLoader<T> {
             synchronized (cachedClasses) {
                 classes = cachedClasses.get();
                 if (classes == null) {
+                    cacheDefaultExtensionName();
                     classes = new HashMap<>();
                     // load all extensions from our extensions directory
                     loadDirectory(classes);
@@ -131,6 +157,14 @@ public final class ExtensionLoader<T> {
             }
         }
         return classes;
+    }
+
+    private void cacheDefaultExtensionName() {
+        final SPI defaultAnnotation = type.getAnnotation(SPI.class);
+        if (defaultAnnotation == null) {
+            return;
+        }
+        cachedDefaultName = defaultAnnotation.value();
     }
 
     private void loadDirectory(Map<String, Class<?>> extensionClasses) {

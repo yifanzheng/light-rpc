@@ -1,0 +1,3 @@
+random=top.yifan.rpc.loadbalance.RandomLoadBalance
+consistenthash=top.yifan.rpc.loadbalance.ConsistentHashLoadBalance
+roundrobin=top.yifan.rpc.loadbalance.RoundRobinLoadBalance

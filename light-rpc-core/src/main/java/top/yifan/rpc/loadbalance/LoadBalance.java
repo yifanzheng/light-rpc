@@ -1,6 +1,7 @@
 package top.yifan.rpc.loadbalance;
 
 import top.yifan.extension.SPI;
+import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
 
 import java.util.List;
@@ -10,7 +11,7 @@ import java.util.List;
  *
  * @author Star Zheng
  */
-@SPI
+@SPI(RandomLoadBalance.NAME)
 public interface LoadBalance {
 
     Endpoint select(List<Endpoint> endpoints, Request request);

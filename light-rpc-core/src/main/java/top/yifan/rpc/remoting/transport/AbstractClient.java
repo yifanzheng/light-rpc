@@ -3,6 +3,7 @@ package top.yifan.rpc.remoting.transport;
 import lombok.extern.slf4j.Slf4j;
 import top.yifan.exception.RemotingException;
 import top.yifan.extension.ExtensionLoader;
+import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
 import top.yifan.rpc.registry.ServiceDiscovery;
@@ -31,8 +32,8 @@ public abstract class AbstractClient implements RemotingClient {
 
     @Override
     public Response send(Request request) throws Exception {
-        InetSocketAddress serviceAddress = serviceDiscovery.lookup(request.getRpcServiceName());
-        return doSend(serviceAddress, request);
+        Endpoint endpoint = serviceDiscovery.lookup(request);
+        return doSend(new InetSocketAddress(endpoint.getHost(), endpoint.getPort()), request);
     }
 
     @Override

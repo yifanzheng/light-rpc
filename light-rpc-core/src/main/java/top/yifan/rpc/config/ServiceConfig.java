@@ -4,6 +4,8 @@ import lombok.Data;
 import lombok.ToString;
 
 /**
+ * ServiceConfig
+ *
  * @author Star Zheng
  */
 @Data
@@ -13,6 +15,8 @@ public class ServiceConfig {
     private String version = "";
 
     private String group = "";
+
+    private int weight = 1;
 
     /**
      * target service

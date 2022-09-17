@@ -1,16 +1,28 @@
 package top.yifan.rpc.registry.zookeeper;
 
+import org.apache.curator.framework.CuratorFramework;
+import org.apache.curator.framework.recipes.cache.ChildData;
+import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
+import top.yifan.exception.RpcException;
 import top.yifan.extension.ExtensionLoader;
+import top.yifan.rpc.domain.Endpoint;
+import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.loadbalance.LoadBalance;
 import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceDiscovery;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
+import top.yifan.util.CollectionUtils;
 import top.yifan.util.URLUtil;
 
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static top.yifan.constants.CommonConstants.*;
 
@@ -21,7 +33,7 @@ import static top.yifan.constants.CommonConstants.*;
  */
 public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
-    private static final Map<String, List<String>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, List<Endpoint>> SERVICE_ADDRESS_MAP = new ConcurrentHashMap<>();
 
     private final ZookeeperTemplate zookeeperTemplate;
 
@@ -37,33 +49,59 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
     }
 
     @Override
-    public InetSocketAddress lookup(String rpcServiceName) {
-        List<String> endpoints = listServiceEndpoints(rpcServiceName);
-        // TODO loadbalance
-        loadBalance.select()
-
-        return null;
+    public Endpoint lookup(Request request) {
+        List<Endpoint> endpoints = listServiceEndpoints(request.getRpcServiceName());
+        if (CollectionUtils.isEmpty(endpoints)) {
+            throw new RpcException("Not found specified service");
+        }
+        // load balance
+        return loadBalance.select(endpoints, request);
     }
 
-    private List<String> listServiceEndpoints(String rpcServiceName) {
+    private List<Endpoint> listServiceEndpoints(String rpcServiceName) {
         String lock = ZKServiceDiscoveryLock.buildLock(rpcServiceName);
         synchronized (lock) {
             if (SERVICE_ADDRESS_MAP.containsKey(rpcServiceName)) {
                 return SERVICE_ADDRESS_MAP.get(rpcServiceName);
             }
-            // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080/{weight}
+            // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
             String serviceNodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName);
-            List<String> serviceEndpoints = zookeeperTemplate.getChildren(serviceNodePath);
             // 注册服务监听器
-            registerNodeWacher(serviceNodePath, rpcServiceName);
+            PathChildrenCache cache = registerNodeWacher(serviceNodePath, rpcServiceName);
+            List<ChildData> childDataList = cache.getCurrentData();
+            if (CollectionUtils.isEmpty(childDataList)) {
+                return Collections.emptyList();
+            }
+            List<Endpoint> serviceEndpoints = childDataList.stream().map(child -> {
+                String address = child.getPath().replace(serviceNodePath + "/", "");
+                String weight = child.getData() == null ? "0" : new String(child.getData(), StandardCharsets.UTF_8);
+
+                String[] split = address.split(":");
+                Endpoint endpoint = new Endpoint(split[0], Integer.parseInt(split[1]));
+                endpoint.setWeight(Integer.parseInt(weight));
+
+                return endpoint;
+            }).collect(Collectors.toList());
+            SERVICE_ADDRESS_MAP.put(rpcServiceName, serviceEndpoints);
             return serviceEndpoints;
         }
     }
 
-    private void registerNodeWacher(String serviceNodePath, String rpcServiceName) {
+    private PathChildrenCache registerNodeWacher(String serviceNodePath, String rpcServiceName) {
         try {
-            zookeeperTemplate.watchChildrenForNodePath(serviceNodePath, (serviceEndpoints) -> {
-                SERVICE_ADDRESS_MAP.put(rpcServiceName, serviceEndpoints);
+            return zookeeperTemplate.watchChildrenForNodePath(serviceNodePath, (client, event) -> {
+                List<String> childNodes = client.getChildren().forPath(serviceNodePath);
+                List<Endpoint> endpoints = new ArrayList<>();
+                for (String child : childNodes) {
+                    byte[] dataBytes = client.getData().forPath(child);
+                    String weight = dataBytes == null ? "0" : new String(dataBytes, StandardCharsets.UTF_8);
+
+                    String[] split = child.split(":");
+                    Endpoint endpoint = new Endpoint(split[0], Integer.parseInt(split[1]));
+                    endpoint.setWeight(Integer.parseInt(weight));
+                    endpoints.add(endpoint);
+                }
+                SERVICE_ADDRESS_MAP.put(rpcServiceName, endpoints);
             });
         } catch (Exception e) {
             throw new RuntimeException(e);

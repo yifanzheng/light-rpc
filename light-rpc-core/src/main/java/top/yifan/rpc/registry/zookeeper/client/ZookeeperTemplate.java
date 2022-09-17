@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
+import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.KeeperException;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class ZookeeperTemplate {
 
     public void createPersistent(String nodePath) {
         try {
-            client.create().forPath(nodePath);
+            client.create().creatingParentsIfNeeded().forPath(nodePath);
         } catch (KeeperException.NodeExistsException e) {
             log.warn("ZNode [{}] already exists.", nodePath, e);
         } catch (Exception e) {
@@ -46,7 +47,8 @@ public class ZookeeperTemplate {
 
     public void createEphemeral(String nodePath) {
         try {
-            client.create().withMode(CreateMode.EPHEMERAL).forPath(nodePath);
+            client.create().creatingParentsIfNeeded()
+                    .withMode(CreateMode.EPHEMERAL).forPath(nodePath);
         } catch (KeeperException.NodeExistsException e) {
             log.warn("ZNode " + nodePath + " already exists, since we will only try to recreate a node on a session expiration" +
                     ", this duplication might be caused by a delete delay from the zk server, which means the old expired session" +
@@ -77,14 +79,28 @@ public class ZookeeperTemplate {
         }
     }
 
-    public Closeable watchChildrenForNodePath(String nodePath, Consumer<List<String>> listChildren) throws Exception {
+    public void createEphemeral(String nodePath, String data) {
+        byte[] dataBytes = data.getBytes(CHARSET);
+        try {
+            client.create().creatingParentsIfNeeded()
+                    .withMode(CreateMode.EPHEMERAL).forPath(nodePath, dataBytes);
+        } catch (KeeperException.NodeExistsException e) {
+            log.warn("ZNode " + nodePath + " already exists, since we will only try to recreate a node on a session expiration" +
+                    ", this duplication might be caused by a delete delay from the zk server, which means the old expired session" +
+                    " may still holds this ZNode and the server just hasn't got time to do the deletion. In this case, " +
+                    "we can just try to delete and create again.", e);
+            deleteNode(nodePath);
+            createEphemeral(nodePath);
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
+    }
+
+    public PathChildrenCache watchChildrenForNodePath(String nodePath, PathChildrenCacheListener listener) throws Exception {
         // 监听所有子节点变化
         PathChildrenCache cache = new PathChildrenCache(client, nodePath, true);
-        cache.getListenable().addListener((curatorFramework, event) -> {
-            List<String> childNodes = curatorFramework.getChildren().forPath(nodePath);
-            listChildren.accept(childNodes);
-        });
-        cache.start();
+        cache.getListenable().addListener(listener);
+        cache.start(PathChildrenCache.StartMode.BUILD_INITIAL_CACHE);
         return cache;
     }
 

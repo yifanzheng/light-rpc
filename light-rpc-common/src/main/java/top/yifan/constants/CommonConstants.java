@@ -25,6 +25,8 @@ public class CommonConstants {
     public static final String REGISTRY_PROTOCOL_KEY = "rpc.registry.protocol";
     public static final String DEFAULT_REGISTRY_PROTOCOL = "zookeeper";
 
+    public static final String REGISTRY_ADDRESS_KEY = "rpc.registry.address";
+
     public static final String CLIENT_CONNECTION_TIMEOUT_KEY = "rpc.client.connection.timeout";
     public static final int DEFAULT_CLIENT_CONNECTION_TIMEOUT = 60000;
 
@@ -33,6 +35,8 @@ public class CommonConstants {
 
     public static final String REMOTE_COMPRESS_KEY = "rpc.remote.compress";
     public static final String DEFAULT_REMOTE_COMPRESS = "identity";
+
+    public static final String LOADBALANCE_STRATEGY_KEY = "rpc.loadbalance.strategy";
 
 
 }

@@ -1,7 +1,8 @@
 package top.yifan.rpc.registry.zookeeper;
 
-import com.google.common.collect.Interner;
-import com.google.common.collect.Interners;
+import top.yifan.extension.ExtensionLoader;
+import top.yifan.rpc.loadbalance.LoadBalance;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceDiscovery;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
 import top.yifan.util.URLUtil;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static top.yifan.constants.CommonConstants.ZK_ROOT;
+import static top.yifan.constants.CommonConstants.*;
 
 /**
  * ZookeeperServiceDiscovery
@@ -24,14 +25,22 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     private final ZookeeperTemplate zookeeperTemplate;
 
+    private final LoadBalance loadBalance;
+
     public ZookeeperServiceDiscovery() {
-        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect("");
+        // 初始化Zookeeper连接
+        String zkAddress = RpcProperties.getParameter(REGISTRY_ADDRESS_KEY);
+        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect(zkAddress);
+        // 初始化loadBalance
+        String loadBalanceName = RpcProperties.getParameter(LOADBALANCE_STRATEGY_KEY);
+        this.loadBalance = ExtensionLoader.getExtensionLoader(LoadBalance.class).getOrDefaultExtension(loadBalanceName);
     }
 
     @Override
     public InetSocketAddress lookup(String rpcServiceName) {
         List<String> endpoints = listServiceEndpoints(rpcServiceName);
         // TODO loadbalance
+        loadBalance.select()
 
         return null;
     }

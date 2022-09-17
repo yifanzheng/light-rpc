@@ -1,14 +1,13 @@
 package top.yifan.rpc.registry.zookeeper;
 
-import org.apache.curator.framework.CuratorFramework;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceRegistry;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
 import top.yifan.util.URLUtil;
 
-import java.io.InputStream;
 import java.net.InetSocketAddress;
-import java.util.Properties;
 
+import static top.yifan.constants.CommonConstants.REGISTRY_ADDRESS_KEY;
 import static top.yifan.constants.CommonConstants.ZK_ROOT;
 
 /**
@@ -21,12 +20,8 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
     private final ZookeeperTemplate zookeeperTemplate;
 
     public ZookeeperServiceRegistry() {
-        // TODO 完善
-        //InputStream stream = this.getClass().getResourceAsStream("");
-        //Properties properties =new Properties();
-        //properties.load(stream);
-        //String zkAddress = properties.getProperty("rpc.zookeeper.address");
-        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect("");
+        String zkAddress = RpcProperties.getParameter(REGISTRY_ADDRESS_KEY);
+        this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect(zkAddress);
     }
 
     @Override

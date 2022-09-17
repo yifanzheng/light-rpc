@@ -12,6 +12,8 @@ import java.util.concurrent.ConcurrentMap;
 
 /**
  * 一致性哈希负载均衡
+ * <p>
+ * 借鉴 dubbo 的一致性哈希算法
  *
  * @author sz7v
  */

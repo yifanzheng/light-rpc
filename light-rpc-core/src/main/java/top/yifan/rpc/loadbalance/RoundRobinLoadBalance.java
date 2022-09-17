@@ -13,6 +13,8 @@ import java.util.stream.Collectors;
 
 /**
  * 轮询负载均衡，支持权重
+ * <p>
+ * 借鉴 weibo motan 的基于权重的轮询负载算法：https://github.com/weibocom/motan/blob/master/motan-core/src/main/java/com/weibo/api/motan/cluster/loadbalance/ConfigurableWeightLoadBalance.java
  *
  * @author sz7v
  */

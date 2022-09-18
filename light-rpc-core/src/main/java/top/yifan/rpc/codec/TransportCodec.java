@@ -12,7 +12,7 @@ import top.yifan.rpc.serialize.SerializeSupport;
  */
 public class TransportCodec implements Codec {
 
-    private static final String NANE = "transport";
+    public static final String NANE = "transport";
 
     @Override
     public byte[] encode(Object data, byte serializeId) {

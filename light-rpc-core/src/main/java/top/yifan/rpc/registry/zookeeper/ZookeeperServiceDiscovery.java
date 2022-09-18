@@ -1,9 +1,7 @@
 package top.yifan.rpc.registry.zookeeper;
 
-import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.PathChildrenCache;
-import org.apache.curator.framework.recipes.cache.PathChildrenCacheEvent;
 import top.yifan.exception.RpcException;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.domain.Endpoint;
@@ -15,7 +13,6 @@ import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
 import top.yifan.util.CollectionUtils;
 import top.yifan.util.URLUtil;
 
-import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,7 +38,7 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     public ZookeeperServiceDiscovery() {
         // 初始化Zookeeper连接
-        String zkAddress = RpcProperties.getParameter(REGISTRY_ADDRESS_KEY);
+        String zkAddress = RpcProperties.getParameter(SUBSCRIBE_ADDRESS_KEY);
         this.zookeeperTemplate = ZookeeperTransporter.getInstance().connect(zkAddress);
         // 初始化loadBalance
         String loadBalanceName = RpcProperties.getParameter(LOADBALANCE_STRATEGY_KEY);
@@ -67,14 +64,14 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
             // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
             String serviceNodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName);
             // 注册服务监听器
-            PathChildrenCache cache = registerNodeWacher(serviceNodePath, rpcServiceName);
+            PathChildrenCache cache = registerNodeWatcher(serviceNodePath, rpcServiceName);
             List<ChildData> childDataList = cache.getCurrentData();
             if (CollectionUtils.isEmpty(childDataList)) {
                 return Collections.emptyList();
             }
             List<Endpoint> serviceEndpoints = childDataList.stream().map(child -> {
                 String address = child.getPath().replace(serviceNodePath + "/", "");
-                String weight = child.getData() == null ? "0" : new String(child.getData(), StandardCharsets.UTF_8);
+                String weight = child.getData() == null ? "1" : new String(child.getData(), StandardCharsets.UTF_8);
 
                 String[] split = address.split(":");
                 Endpoint endpoint = new Endpoint(split[0], Integer.parseInt(split[1]));
@@ -87,14 +84,14 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
         }
     }
 
-    private PathChildrenCache registerNodeWacher(String serviceNodePath, String rpcServiceName) {
+    private PathChildrenCache registerNodeWatcher(String serviceNodePath, String rpcServiceName) {
         try {
             return zookeeperTemplate.watchChildrenForNodePath(serviceNodePath, (client, event) -> {
                 List<String> childNodes = client.getChildren().forPath(serviceNodePath);
                 List<Endpoint> endpoints = new ArrayList<>();
                 for (String child : childNodes) {
                     byte[] dataBytes = client.getData().forPath(child);
-                    String weight = dataBytes == null ? "0" : new String(dataBytes, StandardCharsets.UTF_8);
+                    String weight = dataBytes == null ? "1" : new String(dataBytes, StandardCharsets.UTF_8);
 
                     String[] split = child.split(":");
                     Endpoint endpoint = new Endpoint(split[0], Integer.parseInt(split[1]));

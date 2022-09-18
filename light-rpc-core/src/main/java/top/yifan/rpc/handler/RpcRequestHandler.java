@@ -5,7 +5,6 @@ import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
 import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.provider.ServiceProvider;
-import top.yifan.rpc.provider.ZookeeperServiceProvider;
 
 import java.lang.reflect.Method;
 

@@ -1,4 +1,4 @@
-package top.yifan.rpc.example;
+package top.yifan.rpc;
 
 /**
  * @author Star Zheng
@@ -7,5 +7,5 @@ public interface DemoService {
 
     void print();
 
-    String getName(String name);
+    String sayHello(String name);
 }

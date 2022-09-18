@@ -8,52 +8,48 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import top.yifan.constants.CodecConstants;
 import top.yifan.constants.CommonConstants;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+import top.yifan.rpc.properties.RpcProperties;
+import top.yifan.rpc.remoting.transport.AbstractServer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static top.yifan.constants.CommonConstants.RPC_PROTOCOL_PORT;
 
 /**
  * @author Star Zheng
  */
 @Slf4j
-public class NettyServer {
+public class NettyServer extends AbstractServer {
 
     private ServerBootstrap serverBootstrap;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    public NettyServer() {
-        try {
-            open();
-        } catch (Throwable e) {
-        } finally {
-            close();
-        }
-
-    }
-
-    protected void open() throws Exception {
+    @Override
+    protected void doOpen() throws Exception {
         serverBootstrap = new ServerBootstrap();
         bossGroup = createBossGroup();
         workerGroup = createWorkerGroup();
         initServerBootstrap();
         // 绑定端口，同步等待直到绑定成功
-        ChannelFuture channelFuture = serverBootstrap.bind(getBindAddress()).sync();
+        ChannelFuture channelFuture = serverBootstrap.bind(getPort()).sync();
         log.info("server is ready to receive request from client " +
-                "export at {}", getBindAddress());
+                "export at {}", getPort());
         // 等待服务端监听端口关闭
         channelFuture.channel().closeFuture().sync();
     }
 
-    private void close() {
-        bossGroup.shutdownGracefully();
-        workerGroup.shutdownGracefully();
+    @Override
+    protected void doClose() {
+        Future<?> bossGroupFuture = bossGroup.shutdownGracefully();
+        Future<?> workerGroupFuture = workerGroup.shutdownGracefully();
+        // 阻塞直到关闭完成
+        bossGroupFuture.syncUninterruptibly();
+        workerGroupFuture.syncUninterruptibly();
     }
 
     private void initServerBootstrap() {
@@ -89,8 +85,8 @@ public class NettyServer {
         return NettyEventLoopFactory.eventLoopGroup(CommonConstants.DEFAULT_IO_THREADS, "NettyServerWorker");
     }
 
-    private InetSocketAddress getBindAddress() throws UnknownHostException {
-        String host = InetAddress.getLocalHost().getHostAddress();
-        return new InetSocketAddress("127.0.0.1", 8080);
+    private int getPort() {
+        String portStr = RpcProperties.getParameter(RPC_PROTOCOL_PORT);
+        return StringUtils.isBlank(portStr) ? 8080 : Integer.parseInt(portStr);
     }
 }

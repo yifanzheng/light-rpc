@@ -1,8 +1,13 @@
 package top.yifan.rpc.remoting.transport;
 
 /**
+ * RemotingServer
+ *
  * @author Star Zheng
  */
 public interface RemotingServer {
-    void send(Object message);
+    void start();
+
+    void close();
+
 }

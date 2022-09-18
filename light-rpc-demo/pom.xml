@@ -9,7 +9,14 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>light-rpc-example-client</artifactId>
+    <artifactId>light-rpc-demo</artifactId>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>rpc-demo-interface</module>
+        <module>rpc-demo-service</module>
+        <module>rpc-demo-client</module>
+    </modules>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>

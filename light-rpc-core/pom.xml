@@ -17,9 +17,12 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <netty.version>4.1.74.Final</netty.version>
         <spring.version>5.2.7.RELEASE</spring.version>
-        <curator-version>4.2.0</curator-version>
+        <zookeeper.version>3.4.14</zookeeper.version>
+        <curator.version>4.2.0</curator.version>
+        <!-- compress -->
         <commons.compress.version>1.21</commons.compress.version>
         <snappy.java.version>1.1.8.4</snappy.java.version>
+        <!-- ./ compress -->
         <!-- serialization -->
         <protostuff.version>1.7.2</protostuff.version>
         <hessian.version>4.0.65</hessian.version>
@@ -40,14 +43,35 @@
         </dependency>
         <!--zookeeper-->
         <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${zookeeper.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-log4j12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>log4j</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-framework</artifactId>
-            <version>${curator-version}</version>
+            <version>${curator.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.curator</groupId>
             <artifactId>curator-recipes</artifactId>
-            <version>${curator-version}</version>
+            <version>${curator.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.zookeeper</groupId>
+                    <artifactId>zookeeper</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 <!--        <dependency>-->
 <!--            <groupId>org.springframework</groupId>-->

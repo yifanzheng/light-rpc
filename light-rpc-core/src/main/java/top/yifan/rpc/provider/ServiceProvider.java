@@ -1,5 +1,6 @@
 package top.yifan.rpc.provider;
 
+import top.yifan.extension.SPI;
 import top.yifan.rpc.config.ServiceConfig;
 
 /**
@@ -7,9 +8,10 @@ import top.yifan.rpc.config.ServiceConfig;
  *
  * @author Star Zheng
  */
+@SPI
 public interface ServiceProvider {
 
     Object getService(String rpcServiceName);
 
-    void publishService(ServiceConfig rpcServiceConfig);
+    void registerService(ServiceConfig rpcServiceConfig);
 }

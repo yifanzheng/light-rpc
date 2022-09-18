@@ -1,14 +1,16 @@
 package top.yifan.rpc.config;
 
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * ServiceConfig
  *
  * @author Star Zheng
  */
-@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Getter
+@Builder
 @ToString
 public class ServiceConfig {
 
@@ -24,7 +26,7 @@ public class ServiceConfig {
     private Object service;
 
     public String getRpcServiceName() {
-        return this.getServiceName() + this.getGroup() + this.getVersion();
+        return this.getServiceName() + group + version;
     }
 
     public String getServiceName() {

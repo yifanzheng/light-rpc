@@ -1,5 +1,6 @@
 package top.yifan.rpc.registry;
 
+import top.yifan.extension.SPI;
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
 
@@ -11,6 +12,7 @@ import java.util.List;
  *
  * @author Star Zheng
  */
+@SPI
 public interface ServiceDiscovery {
 
     /**

@@ -1,6 +1,7 @@
 package top.yifan.rpc.properties;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,6 +33,7 @@ public class RpcProperties {
         if (configURL != null) {
             try (InputStream inputStream = configURL.openStream()) {
                 prop.load(inputStream);
+                System.out.println(prop.toString());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -47,7 +49,8 @@ public class RpcProperties {
     }
 
     public static int getParameter(String key, int defaultValue) {
-        return (int) prop.getOrDefault(key, defaultValue);
+        String v = getParameter(key);
+        return StringUtils.isBlank(v) ? defaultValue : Integer.parseInt(v);
     }
 
 }

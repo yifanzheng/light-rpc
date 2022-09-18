@@ -1,5 +1,6 @@
 package top.yifan.rpc.registry.zookeeper;
 
+import top.yifan.rpc.config.ServiceConfig;
 import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceRegistry;
 import top.yifan.rpc.registry.zookeeper.client.ZookeeperTemplate;
@@ -25,9 +26,9 @@ public class ZookeeperServiceRegistry implements ServiceRegistry {
     }
 
     @Override
-    public void register(String rpcServiceName, InetSocketAddress socketAddress) {
+    public void register(ServiceConfig serviceConfig, InetSocketAddress socketAddress) {
         // 类似：/rpc/top.yifan.service.DemoService/127.0.0.1:8080
-        String nodePath = URLUtil.fullURL(ZK_ROOT, rpcServiceName + socketAddress.toString());
-        this.zookeeperTemplate.createEphemeral(nodePath);
+        String nodePath = URLUtil.fullURL(ZK_ROOT, serviceConfig.getRpcServiceName() + socketAddress.toString());
+        this.zookeeperTemplate.createEphemeral(nodePath, String.valueOf(serviceConfig.getWeight()));
     }
 }

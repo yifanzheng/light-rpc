@@ -6,10 +6,13 @@ import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceDiscovery;
 
 import java.net.InetSocketAddress;
 import java.util.List;
+
+import static top.yifan.constants.CommonConstants.SUBSCRIBE_PROTOCOL_KEY;
 
 /**
  * @author Star Zheng
@@ -27,7 +30,8 @@ public abstract class AbstractClient implements RemotingClient {
             close();
             throw new RemotingException("Failed to start connect.", e);
         }
-        serviceDiscovery = ExtensionLoader.getExtensionLoader(ServiceDiscovery.class).getExtension("");
+        String protocol = RpcProperties.getParameter(SUBSCRIBE_PROTOCOL_KEY);
+        serviceDiscovery = ExtensionLoader.getExtensionLoader(ServiceDiscovery.class).getExtension(protocol);
     }
 
     @Override

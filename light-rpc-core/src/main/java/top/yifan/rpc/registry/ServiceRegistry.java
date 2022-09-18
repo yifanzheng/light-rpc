@@ -1,5 +1,8 @@
 package top.yifan.rpc.registry;
 
+import top.yifan.extension.SPI;
+import top.yifan.rpc.config.ServiceConfig;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -7,8 +10,9 @@ import java.net.InetSocketAddress;
  *
  * @author Star Zheng
  */
+@SPI
 public interface ServiceRegistry {
 
-    void register(String rpcServiceName, InetSocketAddress socketAddress);
+    void register(ServiceConfig serviceConfig, InetSocketAddress socketAddress);
 
 }

@@ -5,6 +5,11 @@ package top.yifan.rpc.remoting.transport;
  *
  * @author Star Zheng
  */
-public interface NettyTransporter {
+public class NettyTransporter {
+
+    private NettyTransporter() {
+
+    }
+
 
 }

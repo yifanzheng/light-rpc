@@ -31,7 +31,7 @@ public class RpcClientProxy implements Proxy {
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             // 构建请求体
             Request request = new Request();
-            request.setClassName(method.getDeclaringClass().getName());
+            request.setInterfaceName(method.getDeclaringClass().getName());
             request.setMethodName(method.getName());
             request.setParamTypes(method.getParameterTypes());
             request.setParameters(args);

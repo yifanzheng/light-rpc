@@ -1,6 +1,5 @@
 package top.yifan.rpc.exchange;
 
-import lombok.Builder;
 import lombok.Data;
 import lombok.ToString;
 import top.yifan.util.IDGeneratorUtil;
@@ -19,18 +18,18 @@ public class Request implements Serializable {
     private static final long serialVersionUID = -7845678377043292305L;
 
     private String requestId;
-    private String className;
+    private String interfaceName;
     private String methodName;
     private Class<?>[] paramTypes;
     private Object[] parameters;
-    private String version;
-    private String group;
+    private String version = "";
+    private String group = "";
 
     public Request() {
         this.requestId = IDGeneratorUtil.generateUUID();
     }
 
     public String getRpcServiceName() {
-        return this.getClassName() + this.getGroup() + this.getVersion();
+        return this.getInterfaceName() + group + version;
     }
 }

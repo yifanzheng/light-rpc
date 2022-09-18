@@ -90,7 +90,7 @@ public class ZookeeperTemplate {
                     " may still holds this ZNode and the server just hasn't got time to do the deletion. In this case, " +
                     "we can just try to delete and create again.", e);
             deleteNode(nodePath);
-            createEphemeral(nodePath);
+            createEphemeral(nodePath, data);
         } catch (Exception e) {
             throw new IllegalStateException(e.getMessage(), e);
         }

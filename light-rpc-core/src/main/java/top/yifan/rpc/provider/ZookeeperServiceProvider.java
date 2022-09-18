@@ -1,9 +1,11 @@
 package top.yifan.rpc.provider;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import top.yifan.exception.RpcException;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.config.ServiceConfig;
+import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceRegistry;
 
 import java.net.InetAddress;
@@ -12,6 +14,8 @@ import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static top.yifan.constants.CommonConstants.RPC_PROTOCOL_PORT;
 
 /**
  * ZookeeperServiceProvider
@@ -46,11 +50,11 @@ public class ZookeeperServiceProvider implements ServiceProvider {
     }
 
     @Override
-    public void publishService(ServiceConfig serviceConfig) {
+    public void registerService(ServiceConfig serviceConfig) {
         try {
             String host = InetAddress.getLocalHost().getHostAddress();
             this.addService(serviceConfig.getRpcServiceName(), serviceConfig.getService());
-            serviceRegistry.register(serviceConfig.getRpcServiceName(), new InetSocketAddress(host, 8080));
+            serviceRegistry.register(serviceConfig, new InetSocketAddress(host, getPort()));
         } catch (UnknownHostException e) {
             log.error("occur exception when getHostAddress", e);
         }
@@ -62,5 +66,10 @@ public class ZookeeperServiceProvider implements ServiceProvider {
         }
         serviceCacheMap.put(rpcServiceName, service);
         log.info("Add rpc service: {}", rpcServiceName);
+    }
+
+    private int getPort() {
+        String portStr = RpcProperties.getParameter(RPC_PROTOCOL_PORT);
+        return StringUtils.isBlank(portStr) ? 8080 : Integer.parseInt(portStr);
     }
 }

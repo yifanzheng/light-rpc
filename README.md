@@ -1,6 +1,6 @@
 # light-rpc
 
-light-rpc 是一个基于 Netty 实现的轻量级 RPC 框架。
+light-rpc 是一个基于 Netty 实现的轻量级 RPC 框架。个人进行 RPC 和 Netty 时进行的实践项目。
 
 主要借鉴了国内两款优秀的 PRC 框架：[Dubbo](https://github.com/apache/dubbo) 和 [Motan](https://github.com/weibocom/motan)。
 

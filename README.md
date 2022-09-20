@@ -33,4 +33,4 @@ light-rpc 是一个基于 Netty 实现的轻量级 RPC 框架。个人进行 RPC
  1Byte messageType（消息类型） 4Byte messageId（消息Id） 4Byte dataLength（消息长度）data（object类型数据）
 ```
 
-
+关于 LengthFieldBasedFrameDecoder 的了解可见：https://www.cnblogs.com/java-chen-hao/p/11571229.html

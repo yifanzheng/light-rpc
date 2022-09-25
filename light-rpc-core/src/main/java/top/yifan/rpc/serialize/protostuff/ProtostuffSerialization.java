@@ -1,4 +1,4 @@
-package top.yifan.rpc.serialize.protobuff;
+package top.yifan.rpc.serialize.protostuff;
 
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtostuffIOUtil;
@@ -7,7 +7,6 @@ import io.protostuff.runtime.RuntimeSchema;
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import top.yifan.constants.SerializationType;
-import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.serialize.Serialization;
 
 import java.util.Map;
@@ -17,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author Star Zheng
  */
-public class ProtobuffSerialization implements Serialization {
+public class ProtostuffSerialization implements Serialization {
     private static final LinkedBuffer BUFFER = LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE);
     private static final Objenesis objenesis = new ObjenesisStd(true);
     private final Map<Class<?>, Schema<?>> schemaCache = new ConcurrentHashMap<>();

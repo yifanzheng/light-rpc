@@ -1,6 +1,5 @@
 package top.yifan.rpc.remoting.transport.netty;
 
-import com.alibaba.fastjson.JSON;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;

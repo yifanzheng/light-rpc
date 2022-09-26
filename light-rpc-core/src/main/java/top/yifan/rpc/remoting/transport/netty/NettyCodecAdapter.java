@@ -12,7 +12,6 @@ import top.yifan.constants.MessageType;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.io.Bytes;
 import top.yifan.rpc.codec.Codec;
-import top.yifan.rpc.compressor.Compressor;
 import top.yifan.rpc.compressor.CompressorSupport;
 import top.yifan.rpc.exchange.Message;
 import top.yifan.rpc.exchange.Request;
@@ -123,12 +122,10 @@ public final class NettyCodecAdapter {
 
         /**
          * @param maxFrameLength      最大数据帧长度。如果接收的数据超过此长度，数据将被丢弃，并抛出 TooLongFrameException。
-         * @param lengthFieldOffset   长度域偏移量。 The length field is the one that skips the specified length of byte.
-         * @param lengthFieldLength   The number of bytes in the length field.（此属性的值是数据长度）
-         * @param lengthAdjustment    The compensation value to add to the value of the length field.（数据长度 + lengthAdjustment = 数据总长度）
-         * @param initialBytesToStrip Number of bytes skipped.
-         *                            If you need to receive all of the header+body data, this value is 0
-         *                            if you only want to receive the body data, then you need to skip the number of bytes consumed by the header.
+         * @param lengthFieldOffset   长度域偏移量。
+         * @param lengthFieldLength   长度域字节数，即用几个字节来表示数据长度（此属性的值是数据长度）。
+         * @param lengthAdjustment    数据长度修正（数据长度 + lengthAdjustment = 数据总长度）。长度域指定的长度可以是header+body的整个长度，也可以只是body的长度。如果表示header+body的整个长度，那么需要修正数据长度。
+         * @param initialBytesToStrip 跳过的字节数。如果你需要接收header+body的所有数据，此值就是0；如果你只想接收body数据，那么需要跳过header所占用的字节数
          */
         public InternalDecoder(int maxFrameLength, int lengthFieldOffset, int lengthFieldLength, int lengthAdjustment, int initialBytesToStrip) {
             super(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip);
@@ -142,9 +139,8 @@ public final class NettyCodecAdapter {
                 if (data.readableBytes() < HEAD_LENGTH) {
                     return decoded;
                 }
-
                 try {
-                    return decodeData(data);
+                    return decodeBody(data);
                 } catch (Exception e) {
                     // TODO 如果异常了，设置 Bad Request
                     log.error("Decode frame error!", e);
@@ -156,7 +152,7 @@ public final class NettyCodecAdapter {
             return decoded;
         }
 
-        private Message decodeData(ByteBuf in) {
+        private Message decodeBody(ByteBuf in) {
             // 读取header
             byte[] header = new byte[HEAD_LENGTH];
             in.readBytes(header);
@@ -206,6 +202,14 @@ public final class NettyCodecAdapter {
                     throw new IllegalArgumentException("Unknown magic code: " + Arrays.toString(magic));
                 }
             }
+        }
+
+        private Object decodeRequestData() {
+            return null;
+        }
+
+        private Object decodeResponseData() {
+            return null;
         }
 
     }

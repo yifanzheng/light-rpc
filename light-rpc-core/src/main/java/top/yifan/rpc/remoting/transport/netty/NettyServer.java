@@ -37,8 +37,7 @@ public class NettyServer extends AbstractServer {
         initServerBootstrap();
         // 绑定端口，同步等待直到绑定成功
         ChannelFuture channelFuture = serverBootstrap.bind(getPort()).sync();
-        log.info("server is ready to receive request from client " +
-                "export at {}", getPort());
+        log.info("Server is ready to receive request from client export at {}", getPort());
         // 等待服务端监听端口关闭
         channelFuture.channel().closeFuture().sync();
     }

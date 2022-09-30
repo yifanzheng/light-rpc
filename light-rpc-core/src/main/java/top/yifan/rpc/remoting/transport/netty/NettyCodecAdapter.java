@@ -141,10 +141,6 @@ public final class NettyCodecAdapter {
                 }
                 try {
                     return decodeBody(data);
-                } catch (Exception e) {
-                    // TODO 如果异常了，设置 Bad Request
-                    log.error("Decode frame error!", e);
-                    throw e;
                 } finally {
                     data.release();
                 }
@@ -185,9 +181,25 @@ public final class NettyCodecAdapter {
             dataBytes = CompressorSupport.getCompressor(compressType).decompress(dataBytes);
             // 反序列化对象
             log.info("Codec name: [{}] ", message.getCodec());
-            Class<?> dataClass = messageType == MessageType.REQUEST.getCode() ? Request.class : Response.class;
-            Object data = codec.decode(dataBytes, dataClass, message.getCodec());
-            message.setData(data);
+            if (messageType == MessageType.RESPONSE.getCode()) {
+                // decode response
+                try {
+                    Object data = decodeResponseData(dataBytes, message.getCodec());
+                    message.setData(data);
+                } catch (Throwable e) {
+                    e.printStackTrace();
+                }
+
+            } else {
+                // decode request
+                try {
+                    Object data = decodeRequestData(dataBytes, message.getCodec());
+                    message.setData(data);
+                } catch (Throwable e) {
+                    message.setBroken(true);
+                    message.setData(e);
+                }
+            }
 
             return message;
         }
@@ -204,12 +216,12 @@ public final class NettyCodecAdapter {
             }
         }
 
-        private Object decodeRequestData() {
-            return null;
+        private Object decodeRequestData(byte[] dataBytes, byte deserializeId) {
+            return codec.decode(dataBytes, Request.class, deserializeId);
         }
 
-        private Object decodeResponseData() {
-            return null;
+        private Object decodeResponseData(byte[] dataBytes, byte deserializeId) {
+            return codec.decode(dataBytes, Response.class, deserializeId);
         }
 
     }

@@ -26,32 +26,28 @@ public class RpcRequestHandler {
     }
 
     public Object handler(Request request) {
-        try {
-            Response response = new Response();
-            response.setRequestId(request.getRequestId());
-            // 获取指定服务，并执行指定方法
-            Object obj = serviceProvider.getService(request.getRpcServiceName());
-            if (obj == null) {
-                // 服务不存在
-                response.setStatus(Response.SERVICE_NOT_FOUND);
-            } else {
-                try {
-                    Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
-                    method.setAccessible(true);
-                    Object result = method.invoke(obj, request.getParameters());
+        Response response = new Response();
+        response.setRequestId(request.getRequestId());
+        // 获取指定服务，并执行指定方法
+        Object obj = serviceProvider.getService(request.getRpcServiceName());
+        if (obj == null) {
+            // 服务不存在
+            response.setStatus(Response.SERVICE_NOT_FOUND);
+        } else {
+            try {
+                Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
+                method.setAccessible(true);
+                Object result = method.invoke(obj, request.getParameters());
 
-                    response.setStatus(Response.OK);
-                    response.setResult(result);
-                } catch (Exception e) {
-                    response.setStatus(Response.BAD_REQUEST);
-                    response.setErrorMsg(e.getMessage());
-                }
+                response.setStatus(Response.OK);
+                response.setResult(result);
+            } catch (Exception e) {
+                response.setStatus(Response.BAD_REQUEST);
+                response.setErrorMsg(e.getMessage());
             }
-
-            return response;
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+        return response;
     }
 
     public static RpcRequestHandler getInstance() {

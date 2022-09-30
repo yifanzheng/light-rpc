@@ -49,7 +49,7 @@ public class RpcClientProxy implements Proxy {
             if (!request.getRequestId().equals(response.getRequestId())) {
                 throw new RpcException("Response is error");
             }
-
+            // TODO 完善异常信息
             if (response.getStatus() <= 0 || response.getStatus() != Response.OK) {
                 throw new RpcException("Service invocation fail");
             }

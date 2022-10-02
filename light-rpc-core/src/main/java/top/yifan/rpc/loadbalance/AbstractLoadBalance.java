@@ -2,6 +2,7 @@ package top.yifan.rpc.loadbalance;
 
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 import top.yifan.util.CollectionUtils;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.List;
 public abstract class AbstractLoadBalance implements LoadBalance {
 
     @Override
-    public Endpoint select(List<Endpoint> endpoints, Request request) {
+    public Endpoint select(List<Endpoint> endpoints, RequestData request) {
         if (CollectionUtils.isEmpty(endpoints)) {
             return null;
         }
@@ -22,5 +23,5 @@ public abstract class AbstractLoadBalance implements LoadBalance {
         return doSelect(endpoints, request);
     }
 
-    protected abstract Endpoint doSelect(List<Endpoint> endpoints, Request request);
+    protected abstract Endpoint doSelect(List<Endpoint> endpoints, RequestData request);
 }

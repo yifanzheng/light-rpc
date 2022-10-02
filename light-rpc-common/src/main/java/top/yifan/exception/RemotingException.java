@@ -16,10 +16,10 @@
  */
 package top.yifan.exception;
 
-import java.net.InetSocketAddress;
-
 /**
- * RemotingException.
+ * RemotingException
+ *
+ * @author Star Zheng
  */
 public class RemotingException extends Exception {
 

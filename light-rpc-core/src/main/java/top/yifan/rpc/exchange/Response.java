@@ -56,7 +56,10 @@ public class Response implements Serializable {
      */
     public static final byte SERVICE_ERROR = 70;
 
-    private String requestId;
+    /**
+     * internal client error.
+     */
+    public static final byte CLIENT_ERROR = 90;
 
     private byte status = OK;
 

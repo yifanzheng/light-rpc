@@ -20,9 +20,9 @@ public class DefaultExchangeFuture extends CompletableFuture<Object> {
     private DefaultExchangeFuture() {
     }
 
-    public static DefaultExchangeFuture newFuture(String requestId) {
+    public static DefaultExchangeFuture newFuture(long messageId) {
         DefaultExchangeFuture future = new DefaultExchangeFuture();
-        FUTURES.put(requestId, future);
+        FUTURES.put(String.valueOf(messageId), future);
         return future;
     }
 
@@ -30,8 +30,8 @@ public class DefaultExchangeFuture extends CompletableFuture<Object> {
         return FUTURES.get(requestId);
     }
 
-    public static void sent(Response result) {
-        DefaultExchangeFuture future = FUTURES.remove(result.getRequestId());
+    public static void sent(long msgId, Object result) {
+        DefaultExchangeFuture future = FUTURES.remove(String.valueOf(msgId));
         if (Objects.nonNull(future)) {
             future.complete(result);
         } else {

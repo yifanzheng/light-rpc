@@ -6,6 +6,7 @@ import top.yifan.exception.RpcException;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 import top.yifan.rpc.loadbalance.LoadBalance;
 import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.registry.ServiceDiscovery;
@@ -47,12 +48,13 @@ public class ZookeeperServiceDiscovery implements ServiceDiscovery {
 
     @Override
     public Endpoint lookup(Request request) {
-        List<Endpoint> endpoints = listServiceEndpoints(request.getRpcServiceName());
+        RequestData requestData = (RequestData) request.getRequestData();
+        List<Endpoint> endpoints = listServiceEndpoints(requestData.getRpcServiceName());
         if (CollectionUtils.isEmpty(endpoints)) {
             throw new RpcException("Not found specified service");
         }
         // load balance
-        return loadBalance.select(endpoints, request);
+        return loadBalance.select(endpoints, requestData);
     }
 
     private List<Endpoint> listServiceEndpoints(String rpcServiceName) {

@@ -3,6 +3,7 @@ package top.yifan.rpc.loadbalance;
 import top.yifan.io.Bytes;
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class ConsistentHashLoadBalance extends AbstractLoadBalance {
     private final ConcurrentMap<String, ConsistentHashSelector> selectors = new ConcurrentHashMap<>();
 
     @Override
-    protected Endpoint doSelect(List<Endpoint> endpoints, Request request) {
+    protected Endpoint doSelect(List<Endpoint> endpoints, RequestData request) {
         String key = request.getRpcServiceName();
         int endpointsHashCode = System.identityHashCode(endpoints);
         ConsistentHashSelector selector = selectors.get(key);

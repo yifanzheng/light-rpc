@@ -2,6 +2,7 @@ package top.yifan.rpc.loadbalance;
 
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +26,7 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
     private final ConcurrentMap<String, RoundRobinSelector> selectors = new ConcurrentHashMap<>();
 
     @Override
-    protected Endpoint doSelect(List<Endpoint> endpoints, Request request) {
+    protected Endpoint doSelect(List<Endpoint> endpoints, RequestData request) {
         String key = request.getRpcServiceName();
         int endpointsHashCode = System.identityHashCode(endpoints);
         RoundRobinSelector selector = selectors.get(key);

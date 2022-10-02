@@ -38,7 +38,7 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter {
                     return;
                 }
                 if (messageType == MessageType.RESPONSE.getCode()) {
-                    DefaultExchangeFuture.sent((Response) responseMsg.getData());
+                    DefaultExchangeFuture.sent(responseMsg.getMsgId(), responseMsg.getData());
                 }
             }
         } finally {

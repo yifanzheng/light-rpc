@@ -2,6 +2,7 @@ package top.yifan.rpc.loadbalance;
 
 import top.yifan.rpc.domain.Endpoint;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
@@ -16,7 +17,7 @@ public class RandomLoadBalance extends AbstractLoadBalance {
     public static final String NAME = "random";
 
     @Override
-    protected Endpoint doSelect(List<Endpoint> endpoints, Request request) {
+    protected Endpoint doSelect(List<Endpoint> endpoints, RequestData request) {
         int length = endpoints.size();
         return endpoints.get(ThreadLocalRandom.current().nextInt(length));
     }

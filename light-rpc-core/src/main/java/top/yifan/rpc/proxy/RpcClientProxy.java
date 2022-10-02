@@ -2,6 +2,7 @@ package top.yifan.rpc.proxy;
 
 import top.yifan.exception.RpcException;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 import top.yifan.rpc.exchange.Response;
 import top.yifan.rpc.remoting.transport.RemotingClient;
 
@@ -30,28 +31,27 @@ public class RpcClientProxy implements Proxy {
         @Override
         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
             // 构建请求体
+            RequestData requestData = new RequestData();
+            requestData.setInterfaceName(method.getDeclaringClass().getName());
+            requestData.setMethodName(method.getName());
+            requestData.setParamTypes(method.getParameterTypes());
+            requestData.setParameters(args);
+
             Request request = new Request();
-            request.setInterfaceName(method.getDeclaringClass().getName());
-            request.setMethodName(method.getName());
-            request.setParamTypes(method.getParameterTypes());
-            request.setParameters(args);
+            request.setRequestData(requestData);
             // 发送请求
             Response response = client.send(request);
-            checkValid(response, request);
+
+            checkValid(response);
             return response.getResult();
         }
 
-        private void checkValid(Response response, Request request) {
+        private void checkValid(Response response) {
             if (response == null) {
                 throw new RpcException("Service invocation fail.");
             }
-
-            if (!request.getRequestId().equals(response.getRequestId())) {
-                throw new RpcException("Response is error");
-            }
-            // TODO 完善异常信息
             if (response.getStatus() <= 0 || response.getStatus() != Response.OK) {
-                throw new RpcException("Service invocation fail");
+                throw new RpcException(response.getErrorMsg());
             }
         }
     }

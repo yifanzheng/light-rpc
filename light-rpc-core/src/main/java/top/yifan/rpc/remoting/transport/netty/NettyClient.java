@@ -82,14 +82,16 @@ public class NettyClient extends AbstractClient {
         if (!nettyChannel.isActive()) {
             throw new RemotingException("Failed to send message, cause: Channel inactive, channel: -> " + serviceAddress);
         }
-        // 创建结果回调Future
-        DefaultExchangeFuture resultFuture = DefaultExchangeFuture.newFuture(request.getRequestId());
+
         // 构建消息体
         Message message = new Message();
         message.setMsgType(MessageType.REQUEST.getCode());
         message.setCodec(getCodec().getCode());
         message.setCompress(getCompressor().getCode());
         message.setData(request);
+
+        // 创建结果回调Future
+        DefaultExchangeFuture resultFuture = DefaultExchangeFuture.newFuture(message.getMsgId());
         // 发送请求
         nettyChannel.send(message, 30000);
 

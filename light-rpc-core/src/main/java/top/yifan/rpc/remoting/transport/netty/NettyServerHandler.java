@@ -9,9 +9,13 @@ import io.netty.util.ReferenceCountUtil;
 import lombok.extern.slf4j.Slf4j;
 import top.yifan.constants.CommonConstants;
 import top.yifan.constants.MessageType;
+import top.yifan.exception.NotFoundServiceException;
 import top.yifan.rpc.exchange.Message;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
+import top.yifan.rpc.exchange.Response;
 import top.yifan.rpc.handler.RpcRequestHandler;
+import top.yifan.util.StringUtils;
 
 /**
  * @author Star Zheng
@@ -59,24 +63,55 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
     }
 
     private Message handleRequestMsg(Message requestMsg) {
-        MessageType mType;
-        Object data;
-        if (requestMsg.getMsgType() == MessageType.REQUEST.getCode()) {
-            mType = MessageType.RESPONSE;
-            // 处理Client Request
-            data = rpcRequestHandler.handler((Request) requestMsg.getData());
-        } else {
-            // Heartbeat
-            mType = MessageType.HEARTBEAT;
-            data = CommonConstants.HEARTBEAT_EVENT;
-        }
         Message responseMsg = new Message();
         responseMsg.setMsgId(requestMsg.getMsgId());
-        responseMsg.setMsgType(mType.getCode());
         responseMsg.setCodec(requestMsg.getCodec());
         responseMsg.setCompress(requestMsg.getCompress());
-        responseMsg.setData(data);
 
+        if (requestMsg.getMsgType() == MessageType.REQUEST.getCode()) {
+            Object data = handleRequest((Request) requestMsg.getData());
+            responseMsg.setMsgType(MessageType.RESPONSE.getCode());
+            responseMsg.setData(data);
+        } else {
+            responseMsg.setMsgType(MessageType.HEARTBEAT.getCode());
+            responseMsg.setData(CommonConstants.HEARTBEAT_EVENT);
+        }
         return responseMsg;
+    }
+
+    private Object handleRequest(Request request) {
+        // 处理Client Request
+        Response response = new Response();
+        if (request.isBroken()) {
+            Object data = request.getRequestData();
+
+            String msg;
+            if (data == null) {
+                msg = null;
+            } else if (data instanceof Throwable) {
+                msg = StringUtils.toString((Throwable) data);
+            } else {
+                msg = data.toString();
+            }
+            response.setStatus(Response.BAD_REQUEST);
+            response.setErrorMsg("Fail to decode request due to: " + msg);
+
+            return response;
+        }
+        // 使用 handler 处理请求信息
+        try {
+            Object data = rpcRequestHandler.handler((RequestData) request.getRequestData());
+            response.setStatus(Response.OK);
+            response.setResult(data);
+        } catch (NotFoundServiceException e) {
+            response.setStatus(Response.SERVICE_NOT_FOUND);
+            response.setErrorMsg(e.getMessage());
+        } catch (Exception e) {
+            response.setStatus(Response.SERVICE_ERROR);
+            response.setErrorMsg(StringUtils.toString(e));
+        }
+
+        return response;
+
     }
 }

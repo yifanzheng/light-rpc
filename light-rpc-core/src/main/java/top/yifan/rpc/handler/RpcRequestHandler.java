@@ -1,7 +1,9 @@
 package top.yifan.rpc.handler;
 
+import top.yifan.exception.NotFoundServiceException;
 import top.yifan.extension.ExtensionLoader;
 import top.yifan.rpc.exchange.Request;
+import top.yifan.rpc.exchange.RequestData;
 import top.yifan.rpc.exchange.Response;
 import top.yifan.rpc.properties.RpcProperties;
 import top.yifan.rpc.provider.ServiceProvider;
@@ -25,29 +27,16 @@ public class RpcRequestHandler {
         serviceProvider = ExtensionLoader.getExtensionLoader(ServiceProvider.class).getExtension(protocol);
     }
 
-    public Object handler(Request request) {
-        Response response = new Response();
-        response.setRequestId(request.getRequestId());
+    public Object handler(RequestData request) throws Exception {
         // 获取指定服务，并执行指定方法
         Object obj = serviceProvider.getService(request.getRpcServiceName());
         if (obj == null) {
-            // 服务不存在
-            response.setStatus(Response.SERVICE_NOT_FOUND);
-        } else {
-            try {
-                Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
-                method.setAccessible(true);
-                Object result = method.invoke(obj, request.getParameters());
-
-                response.setStatus(Response.OK);
-                response.setResult(result);
-            } catch (Exception e) {
-                response.setStatus(Response.BAD_REQUEST);
-                response.setErrorMsg(e.getMessage());
-            }
+            throw new NotFoundServiceException("Not found service");
         }
+        Method method = obj.getClass().getMethod(request.getMethodName(), request.getParamTypes());
+        method.setAccessible(true);
 
-        return response;
+        return method.invoke(obj, request.getParameters());
     }
 
     public static RpcRequestHandler getInstance() {

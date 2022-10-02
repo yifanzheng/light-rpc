@@ -37,11 +37,6 @@ public class Message {
     private byte compress;
 
     /**
-     * 是否解码失败
-     */
-    private boolean broken = false;
-
-    /**
      * body data
      */
     private Object data;

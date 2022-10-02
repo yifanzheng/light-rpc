@@ -16,6 +16,7 @@ import top.yifan.rpc.compressor.CompressorSupport;
 import top.yifan.rpc.exchange.Message;
 import top.yifan.rpc.exchange.Request;
 import top.yifan.rpc.exchange.Response;
+import top.yifan.util.StringUtils;
 
 import java.util.Arrays;
 
@@ -187,17 +188,23 @@ public final class NettyCodecAdapter {
                     Object data = decodeResponseData(dataBytes, message.getCodec());
                     message.setData(data);
                 } catch (Throwable e) {
-                    e.printStackTrace();
-                }
+                    Response response = new Response();
+                    response.setStatus(Response.CLIENT_ERROR);
+                    response.setErrorMsg(StringUtils.toString(e));
 
+                    message.setData(response);
+                }
             } else {
                 // decode request
                 try {
                     Object data = decodeRequestData(dataBytes, message.getCodec());
                     message.setData(data);
                 } catch (Throwable e) {
-                    message.setBroken(true);
-                    message.setData(e);
+                    Request request = new Request();
+                    request.setBroken(true);
+                    request.setRequestData(e);
+
+                    message.setData(request);
                 }
             }
 

@@ -1,4 +1,21 @@
-# light-rpc
+<p align="center">
+	<strong>Light RPC</strong>
+</p>
+
+<p align="center">
+    <a>
+        <img src="https://img.shields.io/badge/JDK-1.8+-green.svg" >
+    </a>
+    <a href="https://www.jetbrains.com">
+        <img src="https://img.shields.io/badge/IntelliJ%20IDEA-support-blue.svg" >
+    </a>
+    <a>
+        <img src="https://img.shields.io/github/license/yifanzheng/light-rpc" >
+    </a>
+    <a>
+     <img src="https://img.shields.io/github/stars/yifanzheng/light-rpc" >
+    </a>
+</p>
 
 light-rpc 是一个基于 Netty 实现的轻量级 RPC 框架。个人进行 RPC 和 Netty 学习时的实践项目。
 
